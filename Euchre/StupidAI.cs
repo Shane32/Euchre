@@ -14,10 +14,29 @@ namespace Euchre
 
         public override Bid GetBid()
         {
-            //bid if it has at least 2 of that suit (not counting left bauer)
-            if (Cards.Count(x => x.Suit == Game.RevealedCard.Suit) >= 2)
+            if (Game.Phase == GamePhase.BidRound1)
             {
-                return new Bid(false, Game.RevealedCard.Suit);
+                //bid if it has at least 2 of that suit (not counting left bauer)
+                if (Cards.Count(x => x.Suit == Game.RevealedCard.Suit) >= 2)
+                {
+                    return new Bid(false, Game.RevealedCard.Suit);
+                }
+            }
+            else
+            {
+                //try all the other suits
+                for (int suit = 0; suit < 4; suit++)
+                {
+                    if ((Suit)suit != Game.RevealedCard.Suit)
+                    {
+                        //bid if there are at least 2 of that suit (not counting left bauer)
+                        if (Cards.Count(x => x.Suit == (Suit)suit) >= 2)
+                        {
+                            return new Bid(false, (Suit)suit);
+                        }
+
+                    }
+                }
             }
             return null;
         }
