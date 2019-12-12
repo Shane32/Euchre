@@ -101,6 +101,8 @@ namespace Euchre
                     {
                         Bid = bid;
                         BiddingTeam = Teams[0].Players.Contains(Turn) ? Teams[0] : Teams[1];
+                        if (Phase == GamePhase.BidRound1) Dealer.PickUpCard(RevealedCard);
+                        RevealedCard = null;
                         Turn = GetNextPlayer(Dealer);
                         //set SkipPlayer
                         Phase = GamePhase.GamePlay;

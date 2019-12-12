@@ -27,6 +27,8 @@ namespace Euchre
 
         public abstract Bid GetBid();
 
+        public abstract void PickUpCard(Card card);
+
         public abstract Card GetCard();
     }
 

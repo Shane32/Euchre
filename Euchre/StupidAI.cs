@@ -41,6 +41,11 @@ namespace Euchre
             return null;
         }
 
+        public override void PickUpCard(Card card)
+        {
+            //who needs to pick up a card anyway?
+        }
+
         public override Card GetCard()
         {
             //play the first card that's a legal play
