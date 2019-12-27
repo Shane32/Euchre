@@ -12,6 +12,10 @@ namespace Euchre
         private Deck() { }
         public static Deck ShuffleNew()
         {
+            return ShuffleNew(new Random(Game.GetRngSeed()));
+        }
+        public static Deck ShuffleNew(Random rng)
+        {
             var newPile = new List<Card>();
             for (int suit = 0; suit < 4; suit++)
             {
@@ -22,15 +26,9 @@ namespace Euchre
                 }
             }
             var shuffledPile = new List<Card>();
-            byte[] bytes = new byte[4];
-            using (RNGCryptoServiceProvider rng = new RNGCryptoServiceProvider())
-            {
-                rng.GetBytes(bytes);
-            }
-            var rnd = new Random(BitConverter.ToInt32(bytes, 0));
             while (newPile.Count > 0)
             {
-                var randomIndex = rnd.Next(0, newPile.Count);
+                var randomIndex = rng.Next(0, newPile.Count);
                 shuffledPile.Add(newPile[randomIndex]);
                 newPile.RemoveAt(randomIndex);
             }

@@ -23,8 +23,11 @@ namespace Euchre
         private List<Card> Jacks;
         public Card RightBauer { get; private set; }
         public Card LeftBauer { get; private set; }
-        
-        public Game(Player team1Player1, Player team1Player2, Player team2Player1, Player team2Player2)
+        private readonly Random Rng;
+
+        public Game(Player team1Player1, Player team1Player2, Player team2Player1, Player team2Player2) : this(team1Player1, team1Player2,team2Player1, team2Player2, GetRngSeed()) { }
+
+        public Game(Player team1Player1, Player team1Player2, Player team2Player1, Player team2Player2, int seed)
         {
             Phase = GamePhase.Deal;
             Teams[0] = new Team(team1Player1, team1Player2);
@@ -33,6 +36,7 @@ namespace Euchre
             Players[1] = team2Player1;
             Players[2] = team1Player2;
             Players[3] = team2Player2;
+            Rng = new Random(seed);
             Dealer = PickRandomDealer();
         }
 
@@ -46,14 +50,7 @@ namespace Euchre
 
         public Player PickRandomDealer()
         {
-            //pick a number from 0-3
-            byte[] bytes = new byte[4];
-            using (RNGCryptoServiceProvider rng = new RNGCryptoServiceProvider())
-            {
-                rng.GetBytes(bytes);
-            }
-            Random rnd = new Random(BitConverter.ToInt32(bytes, 0));
-            int playerNum = rnd.Next(0, 4);
+            int playerNum = Rng.Next(0, 4);
             return Players[playerNum];
         }
 
@@ -68,6 +65,7 @@ namespace Euchre
                     BiddingTeam = null;
                     Bid = null;
                     SkipPlayer = null;
+                    foreach (var player in Players) player.StartRound();
                     break;
                 case GamePhase.BidRound1:
                 case GamePhase.BidRound2:
@@ -238,7 +236,7 @@ namespace Euchre
         public void Deal()
         {
             //shuffle the deck
-            Deck = Deck.ShuffleNew();
+            Deck = Deck.ShuffleNew(Rng);
             //initialize all AIs
             for (int i = 0; i < 4; i++)
             {
@@ -281,6 +279,17 @@ namespace Euchre
                 LeftBauer.Suit = trump;
             }
         }
+
+        public static int GetRngSeed()
+        {
+            byte[] bytes = new byte[4];
+            using (RNGCryptoServiceProvider rng = new RNGCryptoServiceProvider())
+            {
+                rng.GetBytes(bytes);
+            }
+            return BitConverter.ToInt32(bytes, 0);
+        }
+
     }
 
     enum GamePhase
@@ -304,4 +313,5 @@ namespace Euchre
             Score = 0;
         }
     }
+
 }
