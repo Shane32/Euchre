@@ -120,5 +120,25 @@ namespace Euchre
                 return card;
             }
         }
+
+        public override void TrickFinished(Player takenBy, Team teamTakenBy)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void HandFinished()
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void StartRound()
+        {
+            throw new NotImplementedException();
+        }
+
+        public override void BiddingFinished()
+        {
+            throw new NotImplementedException();
+        }
     }
 }
