@@ -6,6 +6,12 @@ namespace Euchre
     {
         static void Main(string[] args)
         {
+            //var card1 = new Card(1, Suit.Clubs);
+            //var card2 = new Card(1, Suit.Clubs);
+            //Console.WriteLine(card1 == card2);
+            //Console.WriteLine(card1.Equals(card2));
+            //Console.WriteLine(card1.Equals((object)card2));
+            //Console.WriteLine(object.Equals(card1, card2));
             for (var i = 0; i < 7; i++)
                 System.Threading.Tasks.Task.Run(() =>
                 {
