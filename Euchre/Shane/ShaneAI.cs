@@ -9,20 +9,116 @@ namespace Euchre
     {
         public ShaneAI() : base("StupidAI") { }
 
-        private Player Partner;
-
         private static readonly Suit[] AllSuits = new[] { Suit.Spades, Suit.Clubs, Suit.Diamonds, Suit.Hearts };
+        private static readonly Card[] AllCardsExceptJacks;
+        private static readonly Card[] AllJacks = new[] { new Card(11, Suit.Spades), new Card(11, Suit.Clubs), new Card(11, Suit.Diamonds), new Card(11, Suit.Hearts) };
+
+        private Team Team;
+        private Player Partner;
+        private Card RevealedCard;
+        private bool RevealedCardBuried;
+        private bool IsBiddingTeam;
+        //private int[] HighestCard = new int[4];
+        private List<Card> CardsLeftToPlay = new List<Card>(24);
+        private List<Card> CardsOutThere = new List<Card>(24);
+
+        static ShaneAI()
+        {
+            var cards = new List<Card>(20);
+            for (int suit = 0; suit < 4; suit++)
+            {
+                //9, 10, 11 (J), 12 (Q), 13 (K), 14 (A)
+                for (int number = 9; number < 15; number++)
+                {
+                    if (number != 11)
+                        cards.Add(new Card(number, (Suit)suit));
+                }
+            }
+            AllCardsExceptJacks = cards.ToArray();
+        }
+
+        public override void BiddingFinished()
+        {
+            var trump = Game.Bid.Suit;
+
+            IsBiddingTeam = Game.BiddingTeam == Team;
+            //for (int i = 0; i < 4; i++)
+            //    HighestCard[i] = i == (int)Game.Bid.Suit ? 16 : 14;
+            RevealedCardBuried = trump != RevealedCard.Suit;
+
+            var bidOffSuit = OffSuit(trump);
+            for (int suit = 0; suit < 4; suit++)
+            {
+                if ((Suit)suit == trump)
+                {
+                    AllJacks[suit].Suit = trump;
+                    AllJacks[suit].Number = 16;
+                }
+                else if ((Suit)suit == bidOffSuit)
+                {
+                    AllJacks[suit].Suit = trump;
+                    AllJacks[suit].Number = 15;
+                }
+                else
+                {
+                    AllJacks[suit].Suit = (Suit)suit;
+                    AllJacks[suit].Number = 11;
+                }
+            }
+            CardsLeftToPlay.Clear();
+            if (RevealedCardBuried)
+            {
+                CardsLeftToPlay.AddRange(AllCardsExceptJacks.Concat(AllJacks).Where(x => x != RevealedCard));
+            }
+            else
+            {
+                CardsLeftToPlay.AddRange(AllCardsExceptJacks.Concat(AllJacks));
+            }
+            CardsOutThere.Clear();
+            CardsOutThere.AddRange(CardsLeftToPlay.Where(card => !Cards.Any(myCard => myCard == card)));
+        }
+
+        private void CardWasPlayed(Card card)
+        {
+            CardsLeftToPlay.RemoveAll(x => x == card);
+            CardsOutThere.RemoveAll(x => x == card);
+        }
+
+        public override void TrickFinished(Player takenBy, Team teamTakenBy) 
+        {
+            bool foundMe = false;
+            foreach (var play in Game.CardsInPlay)
+            {
+                if (play.PlayedBy == this) foundMe = true;
+                if (foundMe) CardWasPlayed(play.Card);
+            }
+        }
+
+        public override void HandFinished() { }
 
         public override void StartRound()
         {
             if (Game.Teams[0].Players[0] == this)
+            {
                 Partner = Game.Teams[0].Players[1];
+                Team = Game.Teams[0];
+            }
             else if (Game.Teams[0].Players[1] == this)
+            {
                 Partner = Game.Teams[0].Players[0];
+                Team = Game.Teams[0];
+            }
             else if (Game.Teams[1].Players[0] == this)
+            {
                 Partner = Game.Teams[1].Players[1];
+                Team = Game.Teams[1];
+            }
             else
+            {
                 Partner = Game.Teams[1].Players[0];
+                Team = Game.Teams[1];
+            }
+            RevealedCard = Game.RevealedCard;
         }
 
         public override Bid GetBid()
@@ -75,19 +171,15 @@ namespace Euchre
 
         private int CalculatePickupHandScore(Suit trump)
         {
-            var discard = PickCardToDiscard(trump);
-            var cards = SimulatePickup(Game.RevealedCard, discard);
+            var cards = Cards.Append(Game.RevealedCard);
+            var discard = PickCardToDiscard(trump, cards);
+            cards = cards.Where(x => x != discard);
             return CalculateHandScore(trump, cards);
         }
 
-        private IEnumerable<Card> SimulatePickup(Card card, Card discard)
+        private Card PickCardToDiscard(Suit trump, IEnumerable<Card> cards)
         {
-            return Cards.Where(x => x != discard).Append(card);
-        }
-
-        private Card PickCardToDiscard(Suit trump)
-        {
-            var transformedCards = Cards.Select(x => TransformCard(x, trump));
+            var transformedCards = cards.Select(x => TransformCard(x, trump));
             var trumpNum = transformedCards.Count(x => x.Suit == trump);
             int shortSuitIfNum;
             if (trumpNum <= 2)
@@ -156,13 +248,19 @@ namespace Euchre
 
         public override void PickUpCard(Card card)
         {
-            var discard = PickCardToDiscard(Game.Bid.Suit);
-            Cards.Remove(discard);
             Cards.Add(card);
+            var discard = PickCardToDiscard(Game.Bid.Suit, Cards);
+            Cards.Remove(discard);
         }
 
         public override Card GetCard()
         {
+            //update cards in play list
+            foreach (var play in Game.CardsInPlay)
+            {
+                CardWasPlayed(play.Card);
+            }
+
             //play the first card that's a legal play
             if (Game.CardsInPlay.Count == 0) //leading
             {
