@@ -122,13 +122,20 @@ namespace Euchre
                         //trick is over
                         //determine who won the trick
                         Player trickWinner = DetermineTrickWinner();
+                        int teamTrickWinnerNum = Teams[0].Players.Contains(trickWinner) ? 0 : 1;
+                        Team teamTrickWinner = Teams[teamTrickWinnerNum];
                         //increment the number of tricks taken for that team
-                        TricksTaken[Teams[0].Players.Contains(trickWinner) ? 0 : 1] += 1;
+                        TricksTaken[teamTrickWinnerNum] += 1;
+                        //let all players know the trick is done
+                        foreach (var player in Players) player.TrickFinished(trickWinner, teamTrickWinner);
                         //if played 5 tricks, then end of hand
                         if ((TricksTaken[0] + TricksTaken[1]) == 5)
                         {
                             //see if bidding team won or not
                             UpdateScore();
+                            //let all players know the hand is done
+                            foreach (var player in Players) player.HandFinished();
+                            //update game state
                             if (Teams[0].Score >= 10 || Teams[1].Score >= 10)
                             {
                                 Phase = GamePhase.GameOver;

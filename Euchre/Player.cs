@@ -44,6 +44,16 @@ namespace Euchre
         public abstract Card GetCard();
 
         /// <summary>
+        /// Executes after a trick is played out
+        /// </summary>
+        public abstract void TrickFinished(Player takenBy, Team teamTakenBy);
+
+        /// <summary>
+        /// Executes after a hand is played out
+        /// </summary>
+        public abstract void HandFinished();
+
+        /// <summary>
         /// Executes after a round has started, before bidding begins. Cards have been dealt and one flipped up
         /// </summary>
         public abstract void StartRound();

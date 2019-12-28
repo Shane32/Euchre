@@ -71,5 +71,9 @@ namespace Euchre
         public override void StartRound() { }
 
         public override void BiddingFinished() { }
+
+        public override void TrickFinished(Player takenBy, Team teamTakenBy) { }
+
+        public override void HandFinished() { }
     }
 }
