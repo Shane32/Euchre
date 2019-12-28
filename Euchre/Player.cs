@@ -31,7 +31,9 @@ namespace Euchre
 
         public abstract Card GetCard();
 
-        public virtual void StartRound() { }
+        public abstract void StartRound();
+
+        public abstract void BiddingFinished();
     }
 
     class Bid

@@ -67,5 +67,9 @@ namespace Euchre
                 return card;
             }
         }
+
+        public override void StartRound() { }
+
+        public override void BiddingFinished() { }
     }
 }
