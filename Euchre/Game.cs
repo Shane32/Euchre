@@ -13,6 +13,7 @@ namespace Euchre
         public readonly Team[] Teams = new Team[2];
         public Team BiddingTeam { get; private set; }
         public Bid Bid { get; private set; }
+        public Player Bidder { get; private set; }
         public readonly int[] TricksTaken = new int[2];
         public Player Dealer { get; private set; }
         public Player Turn { get; private set; }
@@ -64,6 +65,7 @@ namespace Euchre
                     Turn = GetNextPlayer(Dealer);
                     BiddingTeam = null;
                     Bid = null;
+                    Bidder = null;
                     SkipPlayer = null;
                     foreach (var player in Players) player.StartRound();
                     break;
@@ -98,6 +100,7 @@ namespace Euchre
                     else // bid
                     {
                         Bid = bid;
+                        Bidder = Turn;
                         BiddingTeam = Teams[0].Players.Contains(Turn) ? Teams[0] : Teams[1];
                         if (Phase == GamePhase.BidRound1) Dealer.PickUpCard(RevealedCard);
                         Turn = GetNextPlayer(Dealer);
