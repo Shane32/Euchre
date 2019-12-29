@@ -15,12 +15,14 @@ namespace Euchre
 
         private Team Team;
         private Player Partner;
+        private Suit Trump;
         private Card RevealedCard;
         private bool RevealedCardBuried;
         private bool IsBiddingTeam;
         //private int[] HighestCard = new int[4];
         private List<Card> CardsLeftToPlay = new List<Card>(24);
-        private List<Card> CardsOutThere = new List<Card>(24);
+        //private List<Card> CardsOutThere = new List<Card>(24);
+        private bool TrumpHasBeenLead = false;
 
         static ShaneAI()
         {
@@ -39,24 +41,25 @@ namespace Euchre
 
         public override void BiddingFinished()
         {
-            var trump = Game.Bid.Suit;
+            Trump = Game.Bid.Suit;
 
             IsBiddingTeam = Game.BiddingTeam == Team;
             //for (int i = 0; i < 4; i++)
             //    HighestCard[i] = i == (int)Game.Bid.Suit ? 16 : 14;
-            RevealedCardBuried = trump != RevealedCard.Suit;
+            RevealedCardBuried = Trump != RevealedCard.Suit;
+            TrumpHasBeenLead = false;
 
-            var bidOffSuit = OffSuit(trump);
+            var bidOffSuit = OffSuit(Trump);
             for (int suit = 0; suit < 4; suit++)
             {
-                if ((Suit)suit == trump)
+                if ((Suit)suit == Trump)
                 {
-                    AllJacks[suit].Suit = trump;
+                    AllJacks[suit].Suit = Trump;
                     AllJacks[suit].Number = 16;
                 }
                 else if ((Suit)suit == bidOffSuit)
                 {
-                    AllJacks[suit].Suit = trump;
+                    AllJacks[suit].Suit = Trump;
                     AllJacks[suit].Number = 15;
                 }
                 else
@@ -74,14 +77,14 @@ namespace Euchre
             {
                 CardsLeftToPlay.AddRange(AllCardsExceptJacks.Concat(AllJacks));
             }
-            CardsOutThere.Clear();
-            CardsOutThere.AddRange(CardsLeftToPlay.Where(card => !Cards.Any(myCard => myCard == card)));
+            //CardsOutThere.Clear();
+            //CardsOutThere.AddRange(CardsLeftToPlay.Where(card => !Cards.Any(myCard => myCard == card)));
         }
 
         private void CardWasPlayed(Card card)
         {
             CardsLeftToPlay.RemoveAll(x => x == card);
-            CardsOutThere.RemoveAll(x => x == card);
+            //CardsOutThere.RemoveAll(x => x == card);
         }
 
         public override void TrickFinished(Player takenBy, Team teamTakenBy) 
@@ -126,6 +129,7 @@ namespace Euchre
             if (Game.Phase == GamePhase.BidRound1)
             {
                 var trump = Game.RevealedCard.Suit;
+                if (!Cards.Any(x => x.Suit == trump)) return null;
                 int score;
                 if (Game.Dealer == this)
                 {
@@ -139,7 +143,7 @@ namespace Euchre
                 else
                 {
                     score = CalculateHandScore(trump, Cards);
-                    score -= 5;
+                    score -= Game.RevealedCard.Number == 11 ? 10 : 5;
                 }
                 if (score >= 40)
                 {
@@ -152,7 +156,7 @@ namespace Euchre
             }
             else
             {
-                var otherSuits = AllSuits.Where(x => x != Game.RevealedCard.Suit);
+                var otherSuits = AllSuits.Where(suit => suit != Game.RevealedCard.Suit && Cards.Any(card => card.Suit == suit));
                 var suitScores = otherSuits.Select(x => new { Suit = x, Score = CalculateHandScore(x, Cards) + (x == OffSuit(x) ? 3 : 0) }).OrderByDescending(x => x.Score);
                 foreach(var suit in suitScores)
                 {
@@ -253,6 +257,18 @@ namespace Euchre
             Cards.Remove(discard);
         }
 
+        private Card Play(Card card)
+        {
+            if (Game.CardsInPlay.Count == 0) TrumpHasBeenLead |= card.Suit == Trump;
+            Cards.Remove(card);
+            return card;
+        }
+
+        //private static Card HighestCard(IEnumerable<Card> cards, Suit suit)
+        //{
+        //    return cards.Where(x => x.Suit == suit).OrderByDescending(x => x.Number).FirstOrDefault();
+        //}
+
         public override Card GetCard()
         {
             //update cards in play list
@@ -260,31 +276,234 @@ namespace Euchre
             {
                 CardWasPlayed(play.Card);
             }
+            if (Game.CardsInPlay.Count > 0) TrumpHasBeenLead |= Game.CardsInPlay[0].Card.Suit == Trump;
 
-            //play the first card that's a legal play
-            if (Game.CardsInPlay.Count == 0) //leading
+            //are we leading?
+            if (Game.CardsInPlay.Count == 0)
             {
-                //grab first card in hand
-                var card = Cards[0];
-                Cards.RemoveAt(0);
-                return card;
+                return Play(GetCardLead());
             }
             else
             {
-                //grab first hand that is in the led suit
-                var suitLed = Game.CardsInPlay[0].Card.Suit;
-                var card = Cards.FirstOrDefault(x => x.Suit == suitLed);
-                //if no cards in the led suit, pick the first card in hand
-                if (card == null) card = Cards[0];
-                Cards.Remove(card);
-                return card;
+                return Play(GetCardNotLead(Game.CardsInPlay[0].Card.Suit));
             }
         }
 
-        private Card Play(Card card)
+        private Card GetCardNotLead(Suit ledSuit)
         {
-            Cards.Remove(card);
+            var validCards = Cards.Where(x => x.Suit == ledSuit);
+            switch (validCards.Count())
+            {
+                case 0: validCards = Cards; break;
+                case 1: return validCards.First();
+            }
+            if (validCards.Count() == 1) return validCards.First();
+
+            bool isFirstTrick = Game.TricksTaken[0] + Game.TricksTaken[1] == 0;
+            bool isTrumpLed = ledSuit == Trump;
+            bool partnerPlayed = Game.CardsInPlay.Any(x => x.PlayedBy == Partner);
+            bool isLastToPlay = Game.CardsInPlay.Count == 3;
+            bool partnerHasTrick = partnerPlayed && Game.CardsInPlay.OrderByDescending(x => x.Card.Suit == Trump ? 10 + x.Card.Number : x.Card.Suit == ledSuit ? x.Card.Number : 0).First().PlayedBy == Partner;
+            var partnerCard = Game.CardsInPlay.Where(x => x.PlayedBy == Partner).FirstOrDefault().Card;
+            var bestCardPlayed = BestCardPlayed();
+            bool tryToBeatTrick = true;
+            if (partnerHasTrick && isLastToPlay)
+            {
+                tryToBeatTrick = false;
+            }
+            else if (!isTrumpLed)
+            {
+                //if partner played ace, then don't try to beat trick
+                if (partnerHasTrick)
+                {
+                    if (partnerCard.Number == 14 || partnerCard.Suit == Trump)
+                        tryToBeatTrick = false;
+                }
+            }
+
+            validCards = validCards.OrderByDescending(x => (x.Suit == Trump ? 10 : 0) + x.Number);
+            if (tryToBeatTrick)
+            {
+                //never beat partner by one
+                if (partnerPlayed)
+                {
+                    var oneBetterThanPartner = OneBetter(partnerCard);
+                    validCards = validCards.Where(x => x != oneBetterThanPartner);
+                }
+                validCards = validCards.ToList();
+                var bestCardInHand = validCards.First();
+                if (IsBetter(bestCardPlayed, bestCardInHand, ledSuit)) return bestCardInHand;
+            }
+            else
+            {
+                validCards = validCards.ToList();
+            }
+            //pick lowest card
+            if (validCards.First().Suit == ledSuit)
+            {
+                //must follow suit
+                return validCards.Last();
+            }
+            //if we only have trump, play the lowest trump
+            if (validCards.All(x => x.Suit == Trump))
+            {
+                return validCards.Last();
+            }
+            //pick from the non-trumps
+            validCards = validCards.Where(x => x.Suit != Trump);
+            //try to short-suit self
+            var card = validCards.GroupBy(x => x.Suit).Where(x => x.Count() == 1).Select(x => x.First()).LastOrDefault();
+            //at least 2 in every suit, so just pick lowest card
+            if (card == null)
+                card = validCards.Last();
+            //play the card
             return card;
+        }
+
+        /// <summary>
+        /// Determines if card2 is better than card1, considering trump and the suit led
+        /// </summary>
+        private bool IsBetter(Card card1, Card card2, Suit ledSuit)
+        {
+            if (card1.Suit == Trump)
+                return (card2.Suit == Trump && card2.Number > card1.Number);
+            else if (card1.Suit == ledSuit)
+                return (card2.Suit == Trump || (card2.Suit == ledSuit && card2.Number > card1.Number));
+            else
+                throw new ArgumentOutOfRangeException(nameof(card1));
+        }
+
+        private Card BestCardPlayed()
+        {
+            if (Game.CardsInPlay.Count == 0) return null;
+            var suitLed = Game.CardsInPlay[0].Card.Suit;
+            Card card = null;
+            foreach (var play in Game.CardsInPlay)
+            {
+                if (card == null || IsBetter(card, play.Card, suitLed)) card = play.Card;
+            }
+            return card;
+        }
+        //11 j 12 q 13 k 14 a 15 j 16 j
+        private Card OneBetter(Card card)
+        {
+            var number = card.Number;
+            var suit = card.Suit;
+            while (number++ < 16)
+            {
+                var card2 = new Card(number, suit);
+                if (CardsLeftToPlay.Contains(card2)) return card2;
+            }
+            return null;
+        }
+
+        private Card GetCardLead()
+        {
+            var leadStyles = new List<LeadStyle>(6);
+            if (IsBiddingTeam && Game.Bid.Alone)
+            {
+                //loner gameplay
+                leadStyles.Add(LeadStyle.TrumpHighestHeld);
+                leadStyles.Add(LeadStyle.OffsuitHighest);
+                leadStyles.Add(LeadStyle.OffsuitHighestHeld);
+            }
+            else if (!IsBiddingTeam)
+            {
+                //non-bidding team gameplay
+                leadStyles.Add(LeadStyle.OffsuitAce);
+                leadStyles.Add(LeadStyle.OffsuitHighest);
+                leadStyles.Add(LeadStyle.OffsuitLow);
+                leadStyles.Add(LeadStyle.TrumpHighest);
+            }
+            else //if (Game.BiddingTeam == Team)
+            {
+                // this player bid -- or partner bid
+                if (!TrumpHasBeenLead)
+                {
+                    //trump hasn't been led yet
+                    leadStyles.Add(LeadStyle.TrumpRight);
+                    leadStyles.Add(LeadStyle.TrumpLeft);
+                    leadStyles.Add(LeadStyle.TrumpLow);
+                }
+                leadStyles.Add(LeadStyle.OffsuitAce);
+                leadStyles.Add(LeadStyle.OffsuitHighest);
+                leadStyles.Add(LeadStyle.OffsuitLow);
+                if (TrumpHasBeenLead)
+                {
+                    leadStyles.Add(LeadStyle.TrumpHighest);
+                    leadStyles.Add(LeadStyle.TrumpLow);
+                }
+            }
+            var card = GetLead(leadStyles);
+            return card;
+        }
+
+        private Card GetLead(IEnumerable<LeadStyle> leadStyles)
+        {
+            foreach (var style in leadStyles)
+            {
+                Card card = null;
+                switch (style)
+                {
+                    case LeadStyle.OffsuitAce:
+                        card = Cards.FirstOrDefault(x => x.Suit != Trump && x.Number == 14);
+                        break;
+                    case LeadStyle.OffsuitHighest:
+                        card = CardsLeftToPlay.Where(x => x.Suit != Trump).OrderByDescending(x => x.Number).GroupBy(x => x.Suit).Select(x => x.First()).Where(x => Cards.Contains(x)).OrderByDescending(x => x.Number).FirstOrDefault();
+                        if (card != null) card = Cards.FirstOrDefault(x => x == card); //reference instance in Cards, rather than created instance
+                        break;
+                    case LeadStyle.OffsuitHighestHeld:
+                        card = Cards.Where(x => x.Suit != Trump).OrderByDescending(x => x.Number).FirstOrDefault();
+                        break;
+                    case LeadStyle.OffsuitLow:
+                        //try to short-suit first
+                        card = Cards.Where(x => x.Suit != Trump).GroupBy(x => x.Suit).Where(x => x.Count() == 1).Select(x => x.First()).OrderBy(x => x.Number).FirstOrDefault();
+                        //or else pick the lowest off-suit card
+                        if (card == null)
+                        {
+                            card = Cards.Where(x => x.Suit != Trump).OrderBy(x => x.Number).FirstOrDefault();
+                        }
+                        break;
+                    case LeadStyle.TrumpRight:
+                        card = Cards.FirstOrDefault(x => x == Game.RightBauer);
+                        break;
+                    case LeadStyle.TrumpLeft:
+                        card = Cards.FirstOrDefault(x => x == Game.LeftBauer);
+                        break;
+                    case LeadStyle.TrumpHighest:
+                        card = CardsLeftToPlay.Where(x => x.Suit == Trump).OrderByDescending(x => x.Number).FirstOrDefault();
+                        if (card != null) card = Cards.FirstOrDefault(x => x == card); //reference instance in Cards, rather than created instance
+                        break;
+                    case LeadStyle.TrumpHighestHeld:
+                        card = Cards.Where(x => x.Suit == Trump).OrderByDescending(x => x.Number).FirstOrDefault();
+                        break;
+                    case LeadStyle.TrumpLow:
+                        card = Cards.Where(x => x.Suit == Trump).OrderBy(x => x.Number).FirstOrDefault();
+                        break;
+                    case LeadStyle.Lowest:
+                        card = Cards.OrderBy(x => x.Suit == Trump ? 20 + x.Number : x.Number).First();
+                        break;
+                    default: //lowest
+                        throw new InvalidOperationException();
+                }
+                if (card != null) return card;
+            }
+            //nothing matched, so just pick lowest card
+            return Cards.OrderBy(x => x.Suit == Trump ? 20 + x.Number : x.Number).First();
+        }
+
+        private enum LeadStyle
+        {
+            OffsuitAce,
+            OffsuitHighest,
+            OffsuitHighestHeld,
+            OffsuitLow,
+            TrumpRight,
+            TrumpLeft,
+            TrumpHighest,
+            TrumpLow,
+            TrumpHighestHeld,
+            Lowest,
         }
     }
 }
