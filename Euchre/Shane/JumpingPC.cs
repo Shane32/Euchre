@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Euchre
+namespace Euchre.Shane
 {
-    class ShaneAI : Player
+    class JumpingPC : Player
     {
-        public ShaneAI() : base("StupidAI") { }
+        public JumpingPC() : base("JumpingPC") { }
 
         private static readonly Suit[] AllSuits = new[] { Suit.Spades, Suit.Clubs, Suit.Diamonds, Suit.Hearts };
         private static readonly Card[] AllCardsExceptJacks;
@@ -24,7 +24,7 @@ namespace Euchre
         //private List<Card> CardsOutThere = new List<Card>(24);
         private bool TrumpHasBeenLead = false;
 
-        static ShaneAI()
+        static JumpingPC()
         {
             var cards = new List<Card>(20);
             for (int suit = 0; suit < 4; suit++)
