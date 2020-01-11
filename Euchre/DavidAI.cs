@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Euchre
 {
-    class DavidAI : Player
+    public class DavidAI : Player
     {
         public int SkillLevel { get; set; }
         public int WinTotal { get; set; }

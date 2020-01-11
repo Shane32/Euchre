@@ -6,7 +6,7 @@ using System.Security.Cryptography;
 
 namespace Euchre
 {
-    class Game
+    public class Game
     {
         private Deck Deck;
         public GamePhase Phase { get; private set; }
@@ -303,7 +303,7 @@ namespace Euchre
 
     }
 
-    enum GamePhase
+    public enum GamePhase
     {
         Deal,
         BidRound1,
@@ -312,7 +312,7 @@ namespace Euchre
         GameOver,
     }
 
-    class Team
+    public class Team
     {
         public readonly Player[] Players = new Player[2];
         public int Score;

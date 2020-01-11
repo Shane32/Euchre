@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Euchre
 {
-    class Card : IEquatable<Card>
+    public class Card : IEquatable<Card>
     {
         public int Number; //11 = J, 12 = Q, 13 = K, 14 = Ace (although 1-8 are not used), 15 = left, 16 = right
         public Suit Suit;
@@ -30,7 +30,7 @@ namespace Euchre
             return Equals(obj as Card);
         }
 
-        public bool Equals([AllowNull] Card other)
+        public bool Equals(Card other)
         {
             return this == other;
         }
@@ -40,7 +40,7 @@ namespace Euchre
             return (int)Suit * 20 + Number;
         }
     }
-    enum Suit
+    public enum Suit
     {
         Hearts = 0,
         Spades = 1,

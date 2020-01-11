@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Euchre
 {
-    abstract class Player
+    public abstract class Player
     {
         public readonly string Name;
         protected List<Card> Cards { get; private set; }
@@ -64,7 +64,7 @@ namespace Euchre
         public abstract void BiddingFinished();
     }
 
-    class Bid
+    public class Bid
     {
         public readonly bool Alone;
         public readonly Suit Suit;

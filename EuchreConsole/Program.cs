@@ -1,6 +1,7 @@
 ﻿using System;
+using Euchre;
 
-namespace Euchre
+namespace EuchreConsole
 {
     class Program
     {
@@ -29,14 +30,14 @@ namespace Euchre
 
             try
             {
-                var player1 = new StupidAI();
-                var player2 = new StupidAI();
+                var player1 = new Euchre.Shane.JumpingPC();
+                var player2 = new Euchre.Shane.JumpingPC();
                 var player3 = new StupidAI();
                 var player4 = new StupidAI();
                 //var game = new Game(player1, player2, player3, player4);
                 //game.PlayGame();
                 //Console.WriteLine($"winner: {((game.Teams[0].Score >= 10) ? "team 1" : "team 2")}");
-                var count = 50000;
+                var count = 10000;
                 var timer = System.Diagnostics.Stopwatch.StartNew();
                 Console.WriteLine($"Playing {count} games of Euchre...");
                 var team1Wins = PlayGames(player1, player2, player3, player4, count);

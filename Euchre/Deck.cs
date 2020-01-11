@@ -5,7 +5,7 @@ using System.Security.Cryptography;
 
 namespace Euchre
 {
-    class Deck
+    public class Deck
     {
         private Stack<Card> Pile;
 

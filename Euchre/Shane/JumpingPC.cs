@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Euchre.Shane
 {
-    class JumpingPC : Player
+    public class JumpingPC : Player
     {
         public JumpingPC() : base("JumpingPC") { }
 
@@ -240,14 +240,22 @@ namespace Euchre.Shane
 
         private static Suit OffSuit(Suit trump)
         {
-            return trump switch
+            switch (trump)
             {
-                Suit.Clubs => Suit.Spades,
-                Suit.Spades => Suit.Clubs,
-                Suit.Hearts => Suit.Diamonds,
-                Suit.Diamonds => Suit.Hearts,
-                _ => throw new ArgumentOutOfRangeException(nameof(trump))
-            };
+                case Suit.Clubs: return Suit.Spades;
+                case Suit.Spades: return Suit.Clubs;
+                case Suit.Hearts: return Suit.Diamonds;
+                case Suit.Diamonds: return Suit.Hearts;
+                default: throw new ArgumentOutOfRangeException(nameof(trump));
+            }
+            //return trump switch
+            //{
+            //    Suit.Clubs => Suit.Spades,
+            //    Suit.Spades => Suit.Clubs,
+            //    Suit.Hearts => Suit.Diamonds,
+            //    Suit.Diamonds => Suit.Hearts,
+            //    _ => throw new ArgumentOutOfRangeException(nameof(trump))
+            //};
         }
 
         public override void PickUpCard(Card card)
