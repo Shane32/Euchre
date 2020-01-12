@@ -31,6 +31,7 @@
             this.btnStartGame = new System.Windows.Forms.Button();
             this.btnNext = new System.Windows.Forms.Button();
             this.lblStatus = new System.Windows.Forms.Label();
+            this.txtGameSeed = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
             // 
             // btnStartGame
@@ -45,7 +46,7 @@
             // 
             // btnNext
             // 
-            this.btnNext.Location = new System.Drawing.Point(93, 12);
+            this.btnNext.Location = new System.Drawing.Point(184, 12);
             this.btnNext.Name = "btnNext";
             this.btnNext.Size = new System.Drawing.Size(75, 23);
             this.btnNext.TabIndex = 1;
@@ -56,16 +57,24 @@
             // lblStatus
             // 
             this.lblStatus.AutoSize = true;
-            this.lblStatus.Location = new System.Drawing.Point(174, 17);
+            this.lblStatus.Location = new System.Drawing.Point(265, 17);
             this.lblStatus.Name = "lblStatus";
             this.lblStatus.Size = new System.Drawing.Size(0, 13);
             this.lblStatus.TabIndex = 2;
+            // 
+            // txtGameSeed
+            // 
+            this.txtGameSeed.Location = new System.Drawing.Point(93, 14);
+            this.txtGameSeed.Name = "txtGameSeed";
+            this.txtGameSeed.Size = new System.Drawing.Size(85, 20);
+            this.txtGameSeed.TabIndex = 3;
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 450);
+            this.Controls.Add(this.txtGameSeed);
             this.Controls.Add(this.lblStatus);
             this.Controls.Add(this.btnNext);
             this.Controls.Add(this.btnStartGame);
@@ -83,6 +92,7 @@
         private System.Windows.Forms.Button btnStartGame;
         private System.Windows.Forms.Button btnNext;
         private System.Windows.Forms.Label lblStatus;
+        private System.Windows.Forms.TextBox txtGameSeed;
     }
 }
 

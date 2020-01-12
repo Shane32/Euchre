@@ -29,8 +29,14 @@ namespace Visualizer
             Players.Add(new PlayerMonitor(new StupidAI()));
             Players.Add(new PlayerMonitor(new Euchre.Shane.JumpingPC()));
             Players.Add(new PlayerMonitor(new StupidAI()));
-            Game = new Game(Players[0], Players[2], Players[1], Players[3]);
-            //Cards.Initialize();
+            if (int.TryParse(txtGameSeed.Text, out var seed))
+            {
+                Game = new Game(Players[0], Players[2], Players[1], Players[3], seed);
+            }
+            else
+            {
+                Game = new Game(Players[0], Players[2], Players[1], Players[3]);
+            }
             this.Invalidate();
         }
 
@@ -45,7 +51,7 @@ namespace Visualizer
              * Licensed under: LGPL 3.0 – https://www.gnu.org/licenses/lgpl-3.0.html
              * 
              */
-            if (Game == null) { base.OnPaint(e); return; }
+            if (Game == null || Game.Phase == GamePhase.GameOver) { base.OnPaint(e); return; }
             var cardSpacingX = 17;
             var cardSpacingY = 35;
             var cardWidth = Cards.CardWidth;
