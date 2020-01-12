@@ -39,6 +39,7 @@ namespace Euchre
             Players[3] = team2Player2;
             Rng = new Random(seed);
             Dealer = PickRandomDealer();
+            Turn = Dealer;
         }
 
         public void PlayGame()
@@ -87,6 +88,7 @@ namespace Euchre
                             if (Turn == Dealer)
                             {
                                 Dealer = GetNextPlayer(Dealer);
+                                Turn = Dealer;
                                 Phase = GamePhase.Deal;
                             }
                             else
@@ -122,6 +124,7 @@ namespace Euchre
                     if (CardsInPlay.Count == (Bid.Alone ? 3 : 4))
                     {
                         Phase = GamePhase.TrickOver;
+                        Turn = DetermineTrickWinner();
                     }
                     else //not yet played a full trick
                     {
@@ -154,6 +157,7 @@ namespace Euchre
                         else
                         {
                             Dealer = GetNextPlayer(Dealer);
+                            Turn = Dealer;
                             Phase = GamePhase.Deal;
                         }
                     }
