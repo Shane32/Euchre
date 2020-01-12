@@ -132,7 +132,7 @@ namespace Euchre
             throw new NotImplementedException();
         }
 
-        public override void StartRound()
+        public override void StartRound(Player me)
         {
             throw new NotImplementedException();
         }

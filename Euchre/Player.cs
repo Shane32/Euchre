@@ -63,7 +63,8 @@ namespace Euchre
         /// <summary>
         /// Executes after a round has started, before bidding begins. Cards have been dealt and one flipped up
         /// </summary>
-        public abstract void StartRound();
+        /// <param name="me">A reference to yourself, as stored in the Players and Teams variables</param>
+        public abstract void StartRound(Player me);
 
         /// <summary>
         /// Executes after a player has bid; examine Bid and BiddingPlayer; RevealedCard is still set

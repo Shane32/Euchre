@@ -67,7 +67,7 @@ namespace Euchre
                     Bid = null;
                     Bidder = null;
                     SkipPlayer = null;
-                    foreach (var player in Players) player.StartRound();
+                    foreach (var player in Players) player.StartRound(player);
                     break;
                 case GamePhase.BidRound1:
                 case GamePhase.BidRound2:

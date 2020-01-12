@@ -43,7 +43,7 @@ namespace Visualizer
             return discard;
         }
 
-        public override void StartRound() => player.StartRound();
+        public override void StartRound(Player me) => player.StartRound(me);
 
         public override void TrickFinished(Player takenBy, Team teamTakenBy) => player.TrickFinished(takenBy, teamTakenBy);
     }

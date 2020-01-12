@@ -69,7 +69,7 @@ namespace Euchre
             }
         }
 
-        public override void StartRound() { }
+        public override void StartRound(Player me) { }
 
         public override void BiddingFinished() { }
 

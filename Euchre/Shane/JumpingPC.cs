@@ -13,6 +13,7 @@ namespace Euchre.Shane
         private static readonly Card[] AllCardsExceptJacks;
         private static readonly Card[] AllJacks = new[] { new Card(11, Suit.Spades), new Card(11, Suit.Clubs), new Card(11, Suit.Diamonds), new Card(11, Suit.Hearts) };
 
+        private Player Me;
         private Team Team;
         private Player Partner;
         private Suit Trump;
@@ -92,26 +93,27 @@ namespace Euchre.Shane
             bool foundMe = false;
             foreach (var play in Game.CardsInPlay)
             {
-                if (play.PlayedBy == this) foundMe = true;
+                if (play.PlayedBy == Me) foundMe = true;
                 if (foundMe) CardWasPlayed(play.Card);
             }
         }
 
         public override void HandFinished() { }
 
-        public override void StartRound()
+        public override void StartRound(Player me)
         {
-            if (Game.Teams[0].Players[0] == this)
+            Me = me;
+            if (Game.Teams[0].Players[0] == me)
             {
                 Partner = Game.Teams[0].Players[1];
                 Team = Game.Teams[0];
             }
-            else if (Game.Teams[0].Players[1] == this)
+            else if (Game.Teams[0].Players[1] == me)
             {
                 Partner = Game.Teams[0].Players[0];
                 Team = Game.Teams[0];
             }
-            else if (Game.Teams[1].Players[0] == this)
+            else if (Game.Teams[1].Players[0] == me)
             {
                 Partner = Game.Teams[1].Players[1];
                 Team = Game.Teams[1];
@@ -131,7 +133,7 @@ namespace Euchre.Shane
                 var trump = Game.RevealedCard.Suit;
                 if (!Cards.Any(x => x.Suit == trump)) return null;
                 int score;
-                if (Game.Dealer == this)
+                if (Game.Dealer == Me)
                 {
                     score = CalculatePickupHandScore(trump);
                 } 
@@ -299,8 +301,8 @@ namespace Euchre.Shane
             bool isFirstTrick = Game.TricksTaken[0] + Game.TricksTaken[1] == 0;
             bool isTrumpLed = ledSuit == Trump;
             bool partnerPlayed = Game.CardsInPlay.Any(x => x.PlayedBy == Partner);
-            bool isLastToPlay = Game.CardsInPlay.Count == 3;
-            bool partnerHasTrick = partnerPlayed && Game.CardsInPlay.OrderByDescending(x => x.Card.Suit == Trump ? 10 + x.Card.Number : x.Card.Suit == ledSuit ? x.Card.Number : 0).First().PlayedBy == Partner;
+            bool isLastToPlay = Game.CardsInPlay.Count == (Game.Bid.Alone ? 2 : 3);
+            bool partnerHasTrick = partnerPlayed && Game.CardsInPlay.OrderByDescending(x => x.Card.Suit == Trump ? 10 + x.Card.Number : (x.Card.Suit == ledSuit ? x.Card.Number : 0)).First().PlayedBy == Partner;
             var partnerCard = Game.CardsInPlay.Where(x => x.PlayedBy == Partner).FirstOrDefault().Card;
             var bestCardPlayed = BestCardPlayed();
             bool tryToBeatTrick = true;
