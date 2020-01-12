@@ -94,9 +94,10 @@ namespace Euchre
             return null;
         }
 
-        public override void PickUpCard(Card card)
+        public override Card PickUpCard(Card card)
         {
             //who needs to pick up a card anyway?
+            return card;
         }
 
         public override Card GetCard()

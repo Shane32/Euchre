@@ -258,11 +258,12 @@ namespace Euchre.Shane
             //};
         }
 
-        public override void PickUpCard(Card card)
+        public override Card PickUpCard(Card card)
         {
             Cards.Add(card);
             var discard = PickCardToDiscard(Game.Bid.Suit, Cards);
             Cards.Remove(discard);
+            return discard;
         }
 
         private Card Play(Card card)

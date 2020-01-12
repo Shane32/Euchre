@@ -88,7 +88,6 @@ namespace Euchre
                             {
                                 Dealer = GetNextPlayer(Dealer);
                                 Phase = GamePhase.Deal;
-                                Deck = Deck.ShuffleNew();
                             }
                             else
                             {
@@ -122,38 +121,7 @@ namespace Euchre
                     //4 normally, but 3 when going alone
                     if (CardsInPlay.Count == (Bid.Alone ? 3 : 4))
                     {
-                        //trick is over
-                        //determine who won the trick
-                        Player trickWinner = DetermineTrickWinner();
-                        int teamTrickWinnerNum = Teams[0].Players.Contains(trickWinner) ? 0 : 1;
-                        Team teamTrickWinner = Teams[teamTrickWinnerNum];
-                        //increment the number of tricks taken for that team
-                        TricksTaken[teamTrickWinnerNum] += 1;
-                        //let all players know the trick is done
-                        foreach (var player in Players) player.TrickFinished(trickWinner, teamTrickWinner);
-                        //if played 5 tricks, then end of hand
-                        if ((TricksTaken[0] + TricksTaken[1]) == 5)
-                        {
-                            //see if bidding team won or not
-                            UpdateScore();
-                            //let all players know the hand is done
-                            foreach (var player in Players) player.HandFinished();
-                            //update game state
-                            if (Teams[0].Score >= 10 || Teams[1].Score >= 10)
-                            {
-                                Phase = GamePhase.GameOver;
-                            }
-                            else
-                            {
-                                Phase = GamePhase.Deal;
-                            }
-                        }
-                        else //still more tricks left to play
-                        {
-                            //winner of last trick leads next trick
-                            Turn = trickWinner;
-                            CardsInPlay.Clear();
-                        }
+                        Phase = GamePhase.TrickOver;
                     }
                     else //not yet played a full trick
                     {
@@ -161,6 +129,43 @@ namespace Euchre
                         Turn = GetNextPlayer(Turn);
                     }
                     break;
+                case GamePhase.TrickOver:
+                    //trick is over
+                    //determine who won the trick
+                    Player trickWinner = DetermineTrickWinner();
+                    int teamTrickWinnerNum = Teams[0].Players.Contains(trickWinner) ? 0 : 1;
+                    Team teamTrickWinner = Teams[teamTrickWinnerNum];
+                    //increment the number of tricks taken for that team
+                    TricksTaken[teamTrickWinnerNum] += 1;
+                    //let all players know the trick is done
+                    foreach (var player in Players) player.TrickFinished(trickWinner, teamTrickWinner);
+                    //if played 5 tricks, then end of hand
+                    if ((TricksTaken[0] + TricksTaken[1]) == 5)
+                    {
+                        //see if bidding team won or not
+                        UpdateScore();
+                        //let all players know the hand is done
+                        foreach (var player in Players) player.HandFinished();
+                        //update game state
+                        if (Teams[0].Score >= 10 || Teams[1].Score >= 10)
+                        {
+                            Phase = GamePhase.GameOver;
+                        }
+                        else
+                        {
+                            Dealer = GetNextPlayer(Dealer);
+                            Phase = GamePhase.Deal;
+                        }
+                    }
+                    else //still more tricks left to play
+                    {
+                        //winner of last trick leads next trick
+                        Turn = trickWinner;
+                        CardsInPlay.Clear();
+                        Phase = GamePhase.GamePlay;
+                    }
+                    break;
+
             }
         }
 
@@ -309,6 +314,7 @@ namespace Euchre
         BidRound1,
         BidRound2,
         GamePlay,
+        TrickOver,
         GameOver,
     }
 

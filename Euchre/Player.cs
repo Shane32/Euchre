@@ -7,7 +7,7 @@ namespace Euchre
     public abstract class Player
     {
         public readonly string Name;
-        protected List<Card> Cards { get; private set; }
+        protected List<Card> Cards { get; } = new List<Card>(6);
         protected Game Game { get; private set; }
 
         public Player(string name)
@@ -18,12 +18,18 @@ namespace Euchre
         public void NewDeal(Game game)
         {
             Game = game;
-            Cards = new List<Card>();
+            Cards.Clear();
+            OnNewDeal(game);
         }
         public void GiveCard(Card card)
         {
             Cards.Add(card);
+            OnGiveCard(card);
         }
+
+        protected virtual void OnNewDeal(Game game) { }
+
+        protected virtual void OnGiveCard(Card card) { }
 
         /// <summary>
         /// Return a bid or null if no bid
@@ -35,7 +41,8 @@ namespace Euchre
         /// Pick up the specified card into your hand, and then discard one
         /// </summary>
         /// <param name="card"></param>
-        public abstract void PickUpCard(Card card);
+        /// <returns>The card to discard</returns>
+        public abstract Card PickUpCard(Card card);
 
         /// <summary>
         /// Return a card to play from your hand
