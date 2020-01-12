@@ -16,6 +16,7 @@ namespace Visualizer
         private Cards Cards = new Cards();
         private Game Game;
         private List<PlayerMonitor> Players = new List<PlayerMonitor>();
+        private static Bitmap ArrowBitmap = Properties.Resources.arrows;
 
         public Form1()
         {
@@ -114,6 +115,7 @@ namespace Visualizer
                     {
                         Cards.Draw(e.Graphics, cards[cardNum], cardsPos.X + nextCardOffset.X * cardNum, cardsPos.Y + nextCardOffset.Y * cardNum);
                     }
+
                 }
                 if (Game.Dealer == player)
                 {
@@ -139,6 +141,36 @@ namespace Visualizer
                     else throw new InvalidOperationException();
                     Cards.Draw(e.Graphics, play.Card, point.X, point.Y);
                 }
+            }
+            //show current turn/deal/trick winner
+            {
+                var arrowSize = 50;
+                var arrowOffset = 150;
+                var arrowLocation = new Point(clientRect.Width / 2 + clientRect.X - arrowSize / 2, clientRect.Height / 2 + clientRect.Y - arrowSize / 2);
+                int playerNum;
+                if (Game.Turn == Players[0])
+                {
+                    arrowLocation.Y += arrowOffset;
+                    playerNum = 0;
+                }
+                else if (Game.Turn == Players[1])
+                {
+                    arrowLocation.X -= arrowOffset;
+                    playerNum = 1;
+                }
+                else if (Game.Turn == Players[2])
+                {
+                    arrowLocation.Y -= arrowOffset;
+                    playerNum = 2;
+                }
+                else if (Game.Turn == Players[3])
+                {
+                    arrowLocation.X += arrowOffset;
+                    playerNum = 3;
+                }
+                else
+                    throw new InvalidOperationException();
+                e.Graphics.DrawImage(ArrowBitmap, new Rectangle(arrowLocation.X, arrowLocation.Y, 50, 50), new Rectangle(50 * playerNum, 0, 50, 50), GraphicsUnit.Pixel);
             }
 
             base.OnPaint(e);
