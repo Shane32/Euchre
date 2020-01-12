@@ -40,8 +40,9 @@ namespace EuchreConsole
                 var count = 10000;
                 var timer = System.Diagnostics.Stopwatch.StartNew();
                 Console.WriteLine($"Playing {count} games of Euchre...");
-                var team1Wins = PlayGames(player1, player2, player3, player4, count);
+                var team1Wins = PlayGames(player1, player2, player3, player4, count, out var lostGameSeed);
                 Console.WriteLine($"After {count} games, team A won {team1Wins} times - approximately {(double)team1Wins / count:0.00%} - in {timer.ElapsedMilliseconds / 1000.0} seconds (about {timer.ElapsedMilliseconds / (double)count:0.00} ms per game)");
+                Console.WriteLine($"The first losing game was number {lostGameSeed}");
             }
             catch (Exception ex)
             {
@@ -49,17 +50,19 @@ namespace EuchreConsole
             }
         }
 
-        static int PlayGames(Player team1Player1, Player team1Player2, Player team2Player1, Player team2Player2, int count)
+        static int PlayGames(Player team1Player1, Player team1Player2, Player team2Player1, Player team2Player2, int count, out int lostGameSeed)
         {
             int team1Wins = 0;
             int team2Wins = 0;
             var rng = new Random(Game.GetRngSeed());
+            lostGameSeed = 0;
             for (int i = 0; i < count; i++)
             {
-                var game = new Game(team1Player1, team1Player2, team2Player1, team2Player2, rng.Next());
+                var seed = rng.Next();
+                var game = new Game(team1Player1, team1Player2, team2Player1, team2Player2, seed);
                 game.PlayGame();
                 var team1Won = game.Teams[0].Score >= 10;
-                if (team1Won) team1Wins++; else team2Wins++;
+                if (team1Won) team1Wins++; else { team2Wins++; lostGameSeed = seed; }
             }
             return team1Wins;
         }
