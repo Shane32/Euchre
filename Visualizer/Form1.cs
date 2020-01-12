@@ -52,16 +52,34 @@ namespace Visualizer
              * Licensed under: LGPL 3.0 – https://www.gnu.org/licenses/lgpl-3.0.html
              * 
              */
-            if (Game == null || Game.Phase == GamePhase.GameOver) { base.OnPaint(e); return; }
-            var cardSpacingX = 17;
-            var cardSpacingY = 35;
-            var cardWidth = Cards.CardWidth;
-            var cardHeight = Cards.CardHeight;
+            if (Game == null) { base.OnPaint(e); return; }
             var clientRect = this.ClientRectangle;
             clientRect.Y = this.btnStartGame.Top * 2 + this.btnStartGame.Height;
             clientRect.Height -= clientRect.Y + this.btnStartGame.Top;
             clientRect.X = this.btnStartGame.Left;
             clientRect.Width -= clientRect.X * 2;
+            //show current score
+            {
+                var scoreSize = 100;
+                var fontSize = 20;
+                using (var blackPen = new Pen(Brushes.Black, 2))
+                using (var font = new Font("Arial", fontSize))
+                {
+                    e.Graphics.DrawLine(blackPen, clientRect.X + clientRect.Width, clientRect.Y, clientRect.X + clientRect.Width - scoreSize, clientRect.Y + scoreSize);
+                    var str = Game.Teams[0].Score.ToString();
+                    //var offsetX = -e.Graphics.MeasureString(str, font).Width;
+                    e.Graphics.DrawString(str, font, Brushes.Black, clientRect.X + clientRect.Width - scoreSize, clientRect.Y);
+                    str = Game.Teams[1].Score.ToString();
+                    var offset2 = e.Graphics.MeasureString(str, font);
+                    //offsetX = -offset2.Width;
+                    e.Graphics.DrawString(str, font, Brushes.Black, clientRect.X + clientRect.Width - offset2.Width, clientRect.Y + scoreSize - offset2.Height);
+                }
+            }
+            if (Game.Phase == GamePhase.GameOver) { base.OnPaint(e); return; }
+            var cardSpacingX = 17;
+            var cardSpacingY = 35;
+            var cardWidth = Cards.CardWidth;
+            var cardHeight = Cards.CardHeight;
             var topPlayerPos = new Point(clientRect.X + (clientRect.Width - cardWidth * 2 - cardSpacingX * 5) / 2 + cardWidth + cardSpacingX, clientRect.Y);
             var leftPlayerPos = new Point(clientRect.X, clientRect.Y + (clientRect.Height - cardHeight * 2 - cardSpacingY * 5) / 2 + cardHeight + cardSpacingY);
             var bottomPlayerPos = topPlayerPos;
