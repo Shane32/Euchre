@@ -240,22 +240,14 @@ namespace Euchre.Shane
 
         private static Suit OffSuit(Suit trump)
         {
-            switch (trump)
+            return trump switch
             {
-                case Suit.Clubs: return Suit.Spades;
-                case Suit.Spades: return Suit.Clubs;
-                case Suit.Hearts: return Suit.Diamonds;
-                case Suit.Diamonds: return Suit.Hearts;
-                default: throw new ArgumentOutOfRangeException(nameof(trump));
-            }
-            //return trump switch
-            //{
-            //    Suit.Clubs => Suit.Spades,
-            //    Suit.Spades => Suit.Clubs,
-            //    Suit.Hearts => Suit.Diamonds,
-            //    Suit.Diamonds => Suit.Hearts,
-            //    _ => throw new ArgumentOutOfRangeException(nameof(trump))
-            //};
+                Suit.Clubs => Suit.Spades,
+                Suit.Spades => Suit.Clubs,
+                Suit.Hearts => Suit.Diamonds,
+                Suit.Diamonds => Suit.Hearts,
+                _ => throw new ArgumentOutOfRangeException(nameof(trump))
+            };
         }
 
         public override Card PickUpCard(Card card)
@@ -272,11 +264,6 @@ namespace Euchre.Shane
             Cards.Remove(card);
             return card;
         }
-
-        //private static Card HighestCard(IEnumerable<Card> cards, Suit suit)
-        //{
-        //    return cards.Where(x => x.Suit == suit).OrderByDescending(x => x.Number).FirstOrDefault();
-        //}
 
         public override Card GetCard()
         {
