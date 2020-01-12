@@ -300,13 +300,14 @@ namespace Euchre.Shane
 
         private Card GetCardNotLead(Suit ledSuit)
         {
+            if (Cards.Count == 1) return Cards[0]; //if only holding one card, play it
             var validCards = Cards.Where(x => x.Suit == ledSuit);
+            var canFollowSuit = true;
             switch (validCards.Count())
             {
-                case 0: validCards = Cards; break;
-                case 1: return validCards.First();
+                case 0: validCards = Cards; canFollowSuit = false; break;
+                case 1: return validCards.First(); //only one valid play
             }
-            if (validCards.Count() == 1) return validCards.First();
 
             bool isFirstTrick = Game.TricksTaken[0] + Game.TricksTaken[1] == 0;
             bool isTrumpLed = ledSuit == Trump;
@@ -330,7 +331,6 @@ namespace Euchre.Shane
                 }
             }
 
-            validCards = validCards.OrderByDescending(x => (x.Suit == Trump ? 10 : 0) + x.Number);
             if (tryToBeatTrick)
             {
                 //never beat partner by one
@@ -340,31 +340,47 @@ namespace Euchre.Shane
                     validCards = validCards.Where(x => x != oneBetterThanPartner);
                 }
                 validCards = validCards.ToList();
-                var bestCardInHand = validCards.First();
-                if (IsBetter(bestCardPlayed, bestCardInHand, ledSuit)) return bestCardInHand;
+                if (canFollowSuit)
+                {
+                    //sort cards best-first
+                    validCards = validCards.OrderByDescending(x => (x.Suit == Trump ? 10 : 0) + x.Number);
+                    //play best card in hand
+                    var bestCardInHand = validCards.First();
+                    if (IsBetter(bestCardPlayed, bestCardInHand, ledSuit)) return bestCardInHand;
+                }
+                else
+                {
+                    //sort cards worst-first
+                    validCards = validCards.OrderBy(x => (x.Suit == Trump ? 10 : 0) + x.Number);
+                    //grab the lowest card that beats the trick
+                    var lowestCardThatIsBetter = validCards.FirstOrDefault(c => IsBetter(bestCardPlayed, c, ledSuit));
+                    if (lowestCardThatIsBetter != null) return lowestCardThatIsBetter;
+                }
             }
             else
             {
                 validCards = validCards.ToList();
             }
+            //sort cards worst-first
+            validCards = validCards.OrderBy(x => (x.Suit == Trump ? 10 : 0) + x.Number);
             //pick lowest card
-            if (validCards.First().Suit == ledSuit)
+            if (canFollowSuit)
             {
                 //must follow suit
-                return validCards.Last();
+                return validCards.First();
             }
             //if we only have trump, play the lowest trump
             if (validCards.All(x => x.Suit == Trump))
             {
-                return validCards.Last();
+                return validCards.First();
             }
             //pick from the non-trumps
             validCards = validCards.Where(x => x.Suit != Trump);
             //try to short-suit self
-            var card = validCards.GroupBy(x => x.Suit).Where(x => x.Count() == 1).Select(x => x.First()).LastOrDefault();
+            var card = validCards.GroupBy(x => x.Suit).Where(x => x.Count() == 1).Select(x => x.First()).FirstOrDefault();
             //at least 2 in every suit, so just pick lowest card
             if (card == null)
-                card = validCards.Last();
+                card = validCards.First();
             //play the card
             return card;
         }
