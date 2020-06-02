@@ -8,22 +8,23 @@ namespace Euchre.Shane
     public class JumpingPC : Player
     {
         public JumpingPC() : base("JumpingPC") { }
+        public JumpingPC(string name) : base(name) { }
 
-        private static readonly Suit[] AllSuits = new[] { Suit.Spades, Suit.Clubs, Suit.Diamonds, Suit.Hearts };
-        private static readonly Card[] AllCardsExceptJacks;
-        private static readonly Card[] AllJacks = new[] { new Card(11, Suit.Spades), new Card(11, Suit.Clubs), new Card(11, Suit.Diamonds), new Card(11, Suit.Hearts) };
+        protected static readonly Suit[] AllSuits = new[] { Suit.Spades, Suit.Clubs, Suit.Diamonds, Suit.Hearts };
+        protected static readonly Card[] AllCardsExceptJacks;
+        protected static readonly Card[] AllJacks = new[] { new Card(11, Suit.Spades), new Card(11, Suit.Clubs), new Card(11, Suit.Diamonds), new Card(11, Suit.Hearts) };
 
-        private Player Me;
-        private Team Team;
-        private Player Partner;
-        private Suit Trump;
-        private Card RevealedCard;
-        private bool RevealedCardBuried;
-        private bool IsBiddingTeam;
+        protected Player Me;
+        protected Team Team;
+        protected Player Partner;
+        protected Suit Trump;
+        protected Card RevealedCard;
+        protected bool RevealedCardBuried;
+        protected bool IsBiddingTeam;
         //private int[] HighestCard = new int[4];
-        private List<Card> CardsLeftToPlay = new List<Card>(24);
+        protected List<Card> CardsLeftToPlay = new List<Card>(24);
         //private List<Card> CardsOutThere = new List<Card>(24);
-        private bool TrumpHasBeenLead = false;
+        protected bool TrumpHasBeenLead = false;
 
         static JumpingPC()
         {
@@ -82,13 +83,13 @@ namespace Euchre.Shane
             //CardsOutThere.AddRange(CardsLeftToPlay.Where(card => !Cards.Any(myCard => myCard == card)));
         }
 
-        private void CardWasPlayed(Card card)
+        protected void CardWasPlayed(Card card)
         {
             CardsLeftToPlay.RemoveAll(x => x == card);
             //CardsOutThere.RemoveAll(x => x == card);
         }
 
-        public override void TrickFinished(Player takenBy, Team teamTakenBy) 
+        public override void TrickFinished(Player takenBy, Team teamTakenBy)
         {
             bool foundMe = false;
             foreach (var play in Game.CardsInPlay)
@@ -136,7 +137,7 @@ namespace Euchre.Shane
                 if (Game.Dealer == Me)
                 {
                     score = CalculatePickupHandScore(trump);
-                } 
+                }
                 else if (Game.Dealer == Partner)
                 {
                     score = CalculateHandScore(trump, Cards);
@@ -160,7 +161,7 @@ namespace Euchre.Shane
             {
                 var otherSuits = AllSuits.Where(suit => suit != Game.RevealedCard.Suit && Cards.Any(card => card.Suit == suit));
                 var suitScores = otherSuits.Select(x => new { Suit = x, Score = CalculateHandScore(x, Cards) + (x == OffSuit(x) ? 3 : 0) }).OrderByDescending(x => x.Score);
-                foreach(var suit in suitScores)
+                foreach (var suit in suitScores)
                 {
                     if (suit.Score >= 40)
                     {
@@ -175,7 +176,7 @@ namespace Euchre.Shane
             return null;
         }
 
-        private int CalculatePickupHandScore(Suit trump)
+        protected int CalculatePickupHandScore(Suit trump)
         {
             var cards = Cards.Append(Game.RevealedCard);
             var discard = PickCardToDiscard(trump, cards);
@@ -183,7 +184,7 @@ namespace Euchre.Shane
             return CalculateHandScore(trump, cards);
         }
 
-        private Card PickCardToDiscard(Suit trump, IEnumerable<Card> cards)
+        protected Card PickCardToDiscard(Suit trump, IEnumerable<Card> cards)
         {
             var transformedCards = cards.Select(x => TransformCard(x, trump));
             var trumpNum = transformedCards.Count(x => x.Suit == trump);
@@ -204,11 +205,12 @@ namespace Euchre.Shane
             return discard;
         }
 
-        private int CalculateHandScore(Suit trump, IEnumerable<Card> cards)
+        protected int CalculateHandScore(Suit trump, IEnumerable<Card> cards)
         {
             int value = 0;
             var sortedCards = cards.Select(x => TransformCard(x, trump)).OrderByDescending(x => x.Number).GroupBy(x => x.Suit).ToList();
-            foreach (var suitGroup in sortedCards) {
+            foreach (var suitGroup in sortedCards)
+            {
                 var suit = suitGroup.Key;
                 var highestCard = suit == trump ? 16 : 14;
                 foreach (var card in suitGroup)
@@ -228,7 +230,7 @@ namespace Euchre.Shane
             return value;
         }
 
-        private static Card TransformCard(Card card, Suit trump)
+        protected static Card TransformCard(Card card, Suit trump)
         {
             var offSuit = OffSuit(trump);
             if (card.Number == 11)
@@ -240,7 +242,7 @@ namespace Euchre.Shane
             return card;
         }
 
-        private static Suit OffSuit(Suit trump)
+        protected static Suit OffSuit(Suit trump)
         {
             return trump switch
             {
@@ -260,7 +262,7 @@ namespace Euchre.Shane
             return discard;
         }
 
-        private Card Play(Card card)
+        protected Card Play(Card card)
         {
             if (Game.CardsInPlay.Count == 0) TrumpHasBeenLead |= card.Suit == Trump;
             Cards.Remove(card);
@@ -287,7 +289,7 @@ namespace Euchre.Shane
             }
         }
 
-        private Card GetCardNotLead(Suit ledSuit)
+        protected Card GetCardNotLead(Suit ledSuit)
         {
             if (Cards.Count == 1) return Cards[0]; //if only holding one card, play it
             var validCards = Cards.Where(x => x.Suit == ledSuit);
@@ -377,7 +379,7 @@ namespace Euchre.Shane
         /// <summary>
         /// Determines if card2 is better than card1, considering trump and the suit led
         /// </summary>
-        private bool IsBetter(Card card1, Card card2, Suit ledSuit)
+        protected bool IsBetter(Card card1, Card card2, Suit ledSuit)
         {
             if (card1.Suit == Trump)
                 return (card2.Suit == Trump && card2.Number > card1.Number);
@@ -387,7 +389,7 @@ namespace Euchre.Shane
                 throw new ArgumentOutOfRangeException(nameof(card1));
         }
 
-        private Card BestCardPlayed()
+        protected Card BestCardPlayed()
         {
             if (Game.CardsInPlay.Count == 0) return null;
             var suitLed = Game.CardsInPlay[0].Card.Suit;
@@ -399,7 +401,7 @@ namespace Euchre.Shane
             return card;
         }
         //11 j 12 q 13 k 14 a 15 j 16 j
-        private Card OneBetter(Card card)
+        protected Card OneBetter(Card card)
         {
             var number = card.Number;
             var suit = card.Suit;
@@ -411,7 +413,7 @@ namespace Euchre.Shane
             return null;
         }
 
-        private Card GetCardLead()
+        protected Card GetCardLead()
         {
             var leadStyles = new List<LeadStyle>(6);
             if (IsBiddingTeam && Game.Bid.Alone)
@@ -452,7 +454,7 @@ namespace Euchre.Shane
             return card;
         }
 
-        private Card GetLead(IEnumerable<LeadStyle> leadStyles)
+        protected Card GetLead(IEnumerable<LeadStyle> leadStyles)
         {
             foreach (var style in leadStyles)
             {
@@ -506,7 +508,7 @@ namespace Euchre.Shane
             return Cards.OrderBy(x => x.Suit == Trump ? 20 + x.Number : x.Number).First();
         }
 
-        private enum LeadStyle
+        protected enum LeadStyle
         {
             OffsuitAce,
             OffsuitHighest,
