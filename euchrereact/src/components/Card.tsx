@@ -1,9 +1,9 @@
-import React from "react";
+﻿import React from "react";
 import TcBcards from "./TcB";
 import TcNcards from "./TcN";
 import backCard from "../images/back.svg";
 
-type CardType =
+export type CardType =
     "2c" | "3c" | "4c" | "5c" | "6c" | "7c" | "8c" | "9c" |
     "Tc" | "Jc" | "Qc" | "Kc" | "Ac" |
     "2h" | "3h" | "4h" | "5h" | "6h" | "7h" | "8h" | "9h" |
