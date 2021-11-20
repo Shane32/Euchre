@@ -1,0 +1,73 @@
+﻿##########################
+# EditorConfig Options   #
+##########################
+
+[*]
+charset = utf-8-bom
+indent_style = space
+indent_size = 4
+insert_final_newline = true
+trim_trailing_whitespace = true
+end_of_line = crlf
+
+[package.json]
+charset = utf-8
+indent_size = 2
+
+[launch.json]
+charset = utf-8
+indent_size = 2
+
+[*.xml]
+indent_style = space
+
+[*.cs]
+csharp_new_line_before_catch                          = false
+csharp_new_line_before_else                           = false
+csharp_new_line_before_finally                        = false
+csharp_new_line_before_members_in_anonymous_types     = true
+csharp_new_line_before_members_in_object_initializers = true
+csharp_new_line_before_open_brace                     = types, methods
+
+# Instance fields are camelCase and start with _
+dotnet_naming_rule.instance_fields_should_be_camel_case.severity  = warning
+dotnet_naming_rule.instance_fields_should_be_camel_case.symbols   = instance_fields
+dotnet_naming_rule.instance_fields_should_be_camel_case.style     = instance_field_style
+
+dotnet_naming_symbols.instance_fields.applicable_kinds            = field
+dotnet_naming_symbols.instance_fields.applicable_accessibilities  = private
+
+dotnet_naming_style.instance_field_style.capitalization           = camel_case
+dotnet_naming_style.instance_field_style.required_prefix          = _
+
+# Constants are uppercase
+dotnet_naming_rule.constant_fields_should_be_camel_case.severity    = warning
+dotnet_naming_rule.constant_fields_should_be_camel_case.symbols     = const_fields
+dotnet_naming_rule.constant_fields_should_be_camel_case.style       = const_field_style
+
+dotnet_naming_symbols.const_fields.applicable_kinds                 = field
+dotnet_naming_symbols.const_fields.applicable_accessibilities       = public
+dotnet_naming_symbols.const_fields.required_modifiers               = const
+
+dotnet_naming_style.const_field_style.capitalization                = all_upper
+
+# Local variables are camelCase
+dotnet_naming_rule.local_variables_should_be_camel_case.severity  = warning
+dotnet_naming_rule.local_variables_should_be_camel_case.symbols   = local_variables
+dotnet_naming_rule.local_variables_should_be_camel_case.style     = local_variable_style
+
+dotnet_naming_symbols.local_variables.applicable_kinds            = local, parameter
+
+dotnet_naming_style.local_variable_style.capitalization           = camel_case
+
+# Methods and properties are PascalCase
+dotnet_naming_rule.methods_should_be_pascal_case.severity  = warning
+dotnet_naming_rule.methods_should_be_pascal_case.symbols   = methods
+dotnet_naming_rule.methods_should_be_pascal_case.style     = pascal_case
+
+dotnet_naming_symbols.methods.applicable_kinds            = local_function, method, property
+
+dotnet_naming_style.pascal_case.capitalization           = pascal_case
+
+# Configure 'Using directive is unnecessary' as warning
+dotnet_diagnostic.IDE0005.severity = warning
