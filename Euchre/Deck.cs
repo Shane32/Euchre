@@ -35,11 +35,6 @@ namespace Euchre
             return new Deck() { Pile = new Stack<Card>(shuffledPile) };
         }
         
-        public static Deck CreateStacked(List<Card> cards)
-        {
-            return new Deck() { Pile = new Stack<Card>(cards) };
-        }
-        
         public Card PullCard()
         {
             return Pile.Pop();

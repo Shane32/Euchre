@@ -52,6 +52,22 @@ namespace EuchreConsole
             }
         }
 
+        static int PlayGames(Player team1Player1, Player team1Player2, Player team2Player1, Player team2Player2, int count, out int lostGameSeed)
+        {
+            int team1Wins = 0;
+            int team2Wins = 0;
+            var rng = new Random(Game.GetRngSeed());
+            lostGameSeed = 0;
+            for (int i = 0; i < count; i++) {
+                var seed = rng.Next();
+                var game = new Game(team1Player1, team1Player2, team2Player1, team2Player2, seed);
+                game.PlayGame();
+                var team1Won = game.Teams[0].Score >= 10;
+                if (team1Won) team1Wins++; else { team2Wins++; lostGameSeed = seed; }
+            }
+            return team1Wins;
+        }
+
         static void Main3(string[] args)
         {
             // This method tests a specific Euchre scenario to determine the value of bidding diamonds
@@ -193,23 +209,6 @@ namespace EuchreConsole
             {
                 Console.WriteLine(ex.ToString());
             }
-        }
-
-        static int PlayGames(Player team1Player1, Player team1Player2, Player team2Player1, Player team2Player2, int count, out int lostGameSeed)
-        {
-            int team1Wins = 0;
-            int team2Wins = 0;
-            var rng = new Random(Game.GetRngSeed());
-            lostGameSeed = 0;
-            for (int i = 0; i < count; i++)
-            {
-                var seed = rng.Next();
-                var game = new Game(team1Player1, team1Player2, team2Player1, team2Player2, seed);
-                game.PlayGame();
-                var team1Won = game.Teams[0].Score >= 10;
-                if (team1Won) team1Wins++; else { team2Wins++; lostGameSeed = seed; }
-            }
-            return team1Wins;
         }
     }
 }
