@@ -8,7 +8,7 @@ namespace Euchre
 {
     public class Game
     {
-        private Deck Deck;
+        protected Deck Deck;
         public GamePhase Phase { get; private set; }
         public readonly Team[] Teams = new Team[2];
         public Team BiddingTeam { get; private set; }
@@ -253,10 +253,15 @@ namespace Euchre
             throw new ArgumentOutOfRangeException(nameof(player));
         }
 
+        protected virtual Deck CreateDeck()
+        {
+            return Deck.ShuffleNew(Rng);
+        }
+
         public virtual void Deal()
         {
             //shuffle the deck
-            Deck = Deck.ShuffleNew(Rng);
+            Deck = CreateDeck();
             //initialize all AIs
             for (int i = 0; i < 4; i++)
             {

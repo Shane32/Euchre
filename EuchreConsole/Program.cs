@@ -54,19 +54,55 @@ namespace EuchreConsole
 
         static void Main3(string[] args)
         {
+            // This method tests a specific Euchre scenario to determine the value of bidding diamonds
+            // in a particular hand configuration. The scenario is as follows:
+            //
+            // FIXED HAND SETUP:
+            // - Player 1 (dealer, team 1): Has King of Diamonds flipped up as the revealed card
+            // - Player 2 (team 2): Random cards dealt according to seed
+            // - Player 3 (team 1 partner): Has A♦, Q♦, A♠, K♠, 9♠ (strong hand with diamonds and spades)
+            // - Player 4 (team 2): Random cards dealt according to seed
+            //
+            // TEST CONFIGURATIONS:
+            // We run 100,000 hands with the same seeds in two different configurations:
+            //
+            // Configuration 1 (Always Bid): Player 3 uses AlwaysBidDiamonds strategy
+            //   - Will always order up diamonds when possible (not alone)
+            //   - Tests the scenario where player 3 aggressively bids with their strong diamond hand
+            //
+            // Configuration 2 (Never Bid): Player 3 uses NeverBid strategy
+            //   - Will never bid, allowing other players to make the decision
+            //   - Tests the scenario where player 3 passes despite having a strong hand
+            //
+            // FILTERING:
+            // We exclude hands where player 2 (opponent) bids diamonds, as this would interfere
+            // with our test of whether player 3 should bid. This ensures we're comparing scenarios
+            // where the bidding decision is primarily in player 3's hands.
+            //
+            // METRICS:
+            // For each configuration, we track:
+            // - Number of hands recorded (excluding filtered hands)
+            // - Average points scored by team 1 (player 1 & 3)
+            // - Average points scored by team 2 (player 2 & 4)
+            //
+            // This allows us to determine if player 3's aggressive bidding strategy with this
+            // particular hand is statistically beneficial compared to passing.
+            
             Console.WriteLine("Euchre AI - Testing Bidding Strategies");
 
             try
             {
-                var count = 10000;
+                var count = 100000;
                 var timer = System.Diagnostics.Stopwatch.StartNew();
                 Console.WriteLine($"Playing {count} hands with different bidding strategies...");
 
                 // Stats tracking
                 int alwaysBidGamesRecorded = 0;
                 int neverBidGamesRecorded = 0;
-                double alwaysBidTotalPoints = 0;
-                double neverBidTotalPoints = 0;
+                double alwaysBidTeam1TotalPoints = 0;
+                double alwaysBidTeam2TotalPoints = 0;
+                double neverBidTeam1TotalPoints = 0;
+                double neverBidTeam2TotalPoints = 0;
 
                 var rng = new Random(Game.GetRngSeed());
 
@@ -82,20 +118,18 @@ namespace EuchreConsole
                     var gameAlways = new Euchre.TestGame(player1a, player2a, player3a, player4a, seed);
                     
                     // Play until bidding is done
-                    while (gameAlways.Phase != GamePhase.GamePlay && gameAlways.Phase != GamePhase.Deal)
+                    do
                     {
                         gameAlways.Next();
                         // If we had to re-deal, break and skip this game
                         if (gameAlways.Phase == GamePhase.Deal && gameAlways.Dealer != gameAlways.Players[0])
+                        {
                             break;
-                    }
+                        }
+                    } while (gameAlways.Phase != GamePhase.GamePlay && gameAlways.Phase != GamePhase.GameOver);
 
-                    // Only record if player 2 (Players[1]) did NOT bid in diamonds
-                    bool player2BidDiamonds = gameAlways.Phase == GamePhase.GamePlay &&
-                                              gameAlways.Bidder == gameAlways.Players[1] &&
-                                              gameAlways.Bid.Suit == Suit.Diamonds;
-                    
-                    if (gameAlways.Phase == GamePhase.GamePlay && !player2BidDiamonds)
+                    if (//gameAlways.Phase == GamePhase.GamePlay &&
+                        !(gameAlways.Bidder == gameAlways.Players[1] && gameAlways.Bid.Suit == Suit.Diamonds))
                     {
                         // Play the hand to completion
                         while (gameAlways.Phase == GamePhase.GamePlay || gameAlways.Phase == GamePhase.TrickOver)
@@ -103,8 +137,9 @@ namespace EuchreConsole
                             gameAlways.Next();
                         }
                         
-                        // Record the points scored by team 1
-                        alwaysBidTotalPoints += gameAlways.Teams[0].Score;
+                        // Record the points scored by both teams
+                        alwaysBidTeam1TotalPoints += gameAlways.Teams[0].Score;
+                        alwaysBidTeam2TotalPoints += gameAlways.Teams[1].Score;
                         alwaysBidGamesRecorded++;
                     }
 
@@ -116,20 +151,17 @@ namespace EuchreConsole
                     var gameNever = new Euchre.TestGame(player1n, player2n, player3n, player4n, seed);
                     
                     // Play until bidding is done
-                    while (gameNever.Phase != GamePhase.GamePlay && gameNever.Phase != GamePhase.Deal)
+                    do
                     {
                         gameNever.Next();
                         // If we had to re-deal, break and skip this game
                         if (gameNever.Phase == GamePhase.Deal && gameNever.Dealer != gameNever.Players[0])
                             break;
-                    }
+                    } while (gameNever.Phase != GamePhase.GamePlay && gameNever.Phase != GamePhase.GameOver);
 
                     // Only record if player 2 (Players[1]) did NOT bid in diamonds
-                    player2BidDiamonds = gameNever.Phase == GamePhase.GamePlay &&
-                                         gameNever.Bidder == gameNever.Players[1] &&
-                                         gameNever.Bid.Suit == Suit.Diamonds;
-                    
-                    if (gameNever.Phase == GamePhase.GamePlay && !player2BidDiamonds)
+                    if (//gameNever.Phase == GamePhase.GamePlay &&
+                        !(gameNever.Bidder == gameNever.Players[1] && gameNever.Bid.Suit == Suit.Diamonds))
                     {
                         // Play the hand to completion
                         while (gameNever.Phase == GamePhase.GamePlay || gameNever.Phase == GamePhase.TrickOver)
@@ -137,8 +169,9 @@ namespace EuchreConsole
                             gameNever.Next();
                         }
                         
-                        // Record the points scored by team 1
-                        neverBidTotalPoints += gameNever.Teams[0].Score;
+                        // Record the points scored by both teams
+                        neverBidTeam1TotalPoints += gameNever.Teams[0].Score;
+                        neverBidTeam2TotalPoints += gameNever.Teams[1].Score;
                         neverBidGamesRecorded++;
                     }
                 }
@@ -148,10 +181,12 @@ namespace EuchreConsole
                 Console.WriteLine($"\nResults after {count} hands:");
                 Console.WriteLine($"Always Bid Configuration:");
                 Console.WriteLine($"  Games recorded: {alwaysBidGamesRecorded}");
-                Console.WriteLine($"  Average points: {(alwaysBidGamesRecorded > 0 ? alwaysBidTotalPoints / alwaysBidGamesRecorded : 0):F2}");
+                Console.WriteLine($"  Team 1 average points: {(alwaysBidGamesRecorded > 0 ? alwaysBidTeam1TotalPoints / alwaysBidGamesRecorded : 0):F2}");
+                Console.WriteLine($"  Team 2 average points: {(alwaysBidGamesRecorded > 0 ? alwaysBidTeam2TotalPoints / alwaysBidGamesRecorded : 0):F2}");
                 Console.WriteLine($"\nNever Bid Configuration:");
                 Console.WriteLine($"  Games recorded: {neverBidGamesRecorded}");
-                Console.WriteLine($"  Average points: {(neverBidGamesRecorded > 0 ? neverBidTotalPoints / neverBidGamesRecorded : 0):F2}");
+                Console.WriteLine($"  Team 1 average points: {(neverBidGamesRecorded > 0 ? neverBidTeam1TotalPoints / neverBidGamesRecorded : 0):F2}");
+                Console.WriteLine($"  Team 2 average points: {(neverBidGamesRecorded > 0 ? neverBidTeam2TotalPoints / neverBidGamesRecorded : 0):F2}");
                 Console.WriteLine($"\nTotal time: {timer.ElapsedMilliseconds / 1000.0:F2} seconds");
             }
             catch (Exception ex)
