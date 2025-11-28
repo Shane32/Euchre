@@ -8,7 +8,7 @@ namespace Euchre
 {
     public class Game
     {
-        private Deck Deck;
+        protected Deck Deck;
         public GamePhase Phase { get; private set; }
         public readonly Team[] Teams = new Team[2];
         public Team BiddingTeam { get; private set; }
@@ -20,11 +20,11 @@ namespace Euchre
         public Player SkipPlayer { get; private set; }
         public readonly Player[] Players = new Player[4];
         public readonly List<(Card Card, Player PlayedBy)> CardsInPlay = new List<(Card Card, Player PlayedBy)>();
-        public Card RevealedCard { get; private set; }
-        private List<Card> Jacks;
+        public Card RevealedCard { get; protected set; }
+        protected List<Card> Jacks;
         public Card RightBauer { get; private set; }
         public Card LeftBauer { get; private set; }
-        private readonly Random Rng;
+        protected Random Rng { get; }
 
         public Game(Player team1Player1, Player team1Player2, Player team2Player1, Player team2Player2) : this(team1Player1, team1Player2,team2Player1, team2Player2, GetRngSeed()) { }
 
@@ -50,7 +50,7 @@ namespace Euchre
             }
         }
 
-        public Player PickRandomDealer()
+        public virtual Player PickRandomDealer()
         {
             int playerNum = Rng.Next(0, 4);
             return Players[playerNum];
@@ -253,10 +253,15 @@ namespace Euchre
             throw new ArgumentOutOfRangeException(nameof(player));
         }
 
-        public void Deal()
+        protected virtual Deck CreateDeck()
+        {
+            return Deck.ShuffleNew(Rng);
+        }
+
+        public virtual void Deal()
         {
             //shuffle the deck
-            Deck = Deck.ShuffleNew(Rng);
+            Deck = CreateDeck();
             //initialize all AIs
             for (int i = 0; i < 4; i++)
             {
