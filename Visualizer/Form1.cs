@@ -1,4 +1,4 @@
-﻿using Euchre;
+using Euchre;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;

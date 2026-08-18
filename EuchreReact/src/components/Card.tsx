@@ -1,4 +1,4 @@
-﻿import React from "react";
+import React from "react";
 import TcBcards from "./TcB";
 import TcNcards from "./TcN";
 import backCard from "../images/back.svg";

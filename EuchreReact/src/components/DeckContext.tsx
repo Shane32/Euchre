@@ -1,4 +1,4 @@
-﻿import React, { useState } from "react";
+import React, { useState } from "react";
 import { CardType } from "./Card";
 
 const enum CardSuit {

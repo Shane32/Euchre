@@ -1,0 +1,13 @@
+global using GameService.Abstractions;
+global using GameService.Actions;
+global using GameService.Cards;
+global using GameService.Definitions;
+global using GameService.Games;
+global using GameService.Games.Euchre;
+global using GameService.Games.Pinochle;
+global using GameService.History;
+global using GameService.Infrastructure;
+global using GameService.Piles;
+global using GameService.Players;
+global using GameService.State;
+global using Xunit;

@@ -1,0 +1,11 @@
+using System.Text.Json.Serialization;
+
+namespace GameService.Cards;
+
+[JsonConverter(typeof(CamelCaseJsonStringEnumConverter))]
+public enum CardOrientation
+{
+    Upright,
+    Sideways,
+    Inverted
+}
