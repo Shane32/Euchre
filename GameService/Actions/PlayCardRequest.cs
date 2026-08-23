@@ -1,5 +1,6 @@
 namespace GameService.Actions;
 
+/// <summary>Represents a play card request.</summary>
 public sealed record PlayCardRequest(
     string PlayerId,
     PileId SourcePileId,

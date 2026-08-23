@@ -2,6 +2,7 @@ using System.Text.Json;
 
 namespace GameService.Games.Euchre;
 
+/// <summary>Provides the game service implementation for Euchre.</summary>
 public sealed class EuchreGameService : GameServiceBase
 {
     private static readonly Dictionary<CardRank, int> s_ranks = new() {
@@ -13,6 +14,7 @@ public sealed class EuchreGameService : GameServiceBase
         [CardRank.Ace] = 6
     };
 
+    /// <summary>Initializes a new instance of the euchre game service type.</summary>
     public EuchreGameService(
         string gameId,
         IReadOnlyList<PlayerRegistration> players,
@@ -24,6 +26,7 @@ public sealed class EuchreGameService : GameServiceBase
         State.DealerSeat = Definition.PlayerConfiguration.Seats[0];
     }
 
+    /// <summary>Restores a game service from recorded history.</summary>
     public static EuchreGameService Restore(GameHistory history)
     {
         ArgumentNullException.ThrowIfNull(history);
@@ -40,6 +43,7 @@ public sealed class EuchreGameService : GameServiceBase
         return game;
     }
 
+    /// <summary>Starts the game.</summary>
     public override void StartGame()
     {
         ExecuteSystemAction(GameActionType.Deal, SystemActionIds.StartGame, () => {
@@ -53,27 +57,35 @@ public sealed class EuchreGameService : GameServiceBase
         });
     }
 
+    /// <summary>Attempts to pass.</summary>
     public ActionResult Pass(string playerId, string actionId, long? expectedRevision = null)
         => PerformAction(Request(playerId, GameActionType.Pass, new { }, actionId, expectedRevision));
 
+    /// <summary>Attempts to order up the turned suit.</summary>
     public ActionResult OrderUp(string playerId, bool alone, string actionId, long? expectedRevision = null)
         => PerformAction(Request(playerId, GameActionType.OrderUp, new { alone }, actionId, expectedRevision));
 
+    /// <summary>Attempts to choose the trump contract.</summary>
     public ActionResult ChooseTrump(string playerId, CardSuit suit, bool alone, string actionId, long? expectedRevision = null)
         => PerformAction(Request(playerId, GameActionType.ChooseTrump, new { suit, alone }, actionId, expectedRevision));
 
+    /// <summary>Attempts to choose a no-trump contract.</summary>
     public ActionResult ChooseNoTrump(string playerId, bool alone, string actionId, long? expectedRevision = null)
         => PerformAction(Request(playerId, GameActionType.ChooseNoTrump, new { alone }, actionId, expectedRevision));
 
+    /// <summary>Attempts to claim an ace-no-face hand.</summary>
     public ActionResult ClaimAceNoFace(string playerId, string actionId, long? expectedRevision = null)
         => PerformAction(Request(playerId, GameActionType.ClaimAceNoFace, new { }, actionId, expectedRevision));
 
+    /// <summary>Attempts to discard a card.</summary>
     public ActionResult Discard(string playerId, int cardIndex, string actionId, long? expectedRevision = null)
         => PlayCard(new PlayCardRequest(playerId, PileIds.Hand(GetSeat(playerId)), cardIndex, PileIds.Kitty, actionId, expectedRevision));
 
+    /// <summary>Attempts to play a card.</summary>
     public ActionResult Play(string playerId, int cardIndex, string actionId, long? expectedRevision = null)
         => PlayCard(new PlayCardRequest(playerId, PileIds.Hand(GetSeat(playerId)), cardIndex, PileIds.CurrentTrick, actionId, expectedRevision));
 
+    /// <summary>Gets a card's effective suit for the current contract.</summary>
     public static CardSuit GetEffectiveSuit(CardState card, CardSuit? trump)
     {
         if (trump.HasValue && card.Rank == CardRank.Jack && card.Suit == SameColorSuit(trump.Value)) {
@@ -82,6 +94,7 @@ public sealed class EuchreGameService : GameServiceBase
         return card.Suit ?? throw new ArgumentException("Card suit is required.", nameof(card));
     }
 
+    /// <summary>Gets a card's relative trick-taking strength.</summary>
     public static int GetCardStrength(CardState card, CardSuit ledSuit, CardSuit? trump)
     {
         var effectiveSuit = GetEffectiveSuit(card, trump);
@@ -100,6 +113,7 @@ public sealed class EuchreGameService : GameServiceBase
         return s_ranks[card.Rank!.Value];
     }
 
+    /// <summary>Determines whether a card can be legally played.</summary>
     public static bool CanPlayCard(
         IReadOnlyCollection<CardState> hand,
         CardState selected,
@@ -114,6 +128,7 @@ public sealed class EuchreGameService : GameServiceBase
             || !hand.Any(card => GetEffectiveSuit(card, trump) == ledSuit);
     }
 
+    /// <summary>Scores the current deal.</summary>
     public static (int MakerPoints, int DefenderPoints) ScoreDeal(int makerTricks, bool alone)
     {
         if (makerTricks < 0 || makerTricks > 5) {
@@ -128,11 +143,13 @@ public sealed class EuchreGameService : GameServiceBase
         return (1, 0);
     }
 
+    /// <summary>Determines whether a hand qualifies for an ace-no-face redeal.</summary>
     public static bool IsAceNoFace(IReadOnlyCollection<CardState> hand)
         => hand.Count == 5
             && hand.Count(card => card.Rank == CardRank.Ace) == 1
             && hand.All(card => card.Rank is CardRank.Ace or CardRank.Nine or CardRank.Ten);
 
+    /// <summary>Determines whether an action is available to a player.</summary>
     protected override bool IsActionAvailable(PlayerState player, GameActionType actionId)
     {
         if (actionId == GameActionType.Pass && State.Phase.Id == GamePhase.BidRoundTwo
@@ -152,6 +169,7 @@ public sealed class EuchreGameService : GameServiceBase
         return true;
     }
 
+    /// <summary>Applies a non-card game action.</summary>
     protected override void ApplyOtherAction(PlayerState player, GameActionType name, JsonElement arguments)
     {
         switch (name) {
@@ -176,6 +194,7 @@ public sealed class EuchreGameService : GameServiceBase
         }
     }
 
+    /// <summary>Validates a requested card play.</summary>
     protected override void ValidatePlayCard(PlayerState player, PileState source, CardState card, PileState target)
     {
         base.ValidatePlayCard(player, source, card, target);
@@ -200,6 +219,7 @@ public sealed class EuchreGameService : GameServiceBase
         }
     }
 
+    /// <summary>Applies a validated card play.</summary>
     protected override void ApplyPlayCard(PlayerState player, PileState source, CardState card, PileState target)
     {
         if (State.Phase.Id == GamePhase.DealerDiscard) {

@@ -2,6 +2,7 @@ using System.Text.Json;
 
 namespace GameService.Definitions;
 
+/// <summary>Loads and validates game definitions.</summary>
 public static class GameDefinitionLoader
 {
     private static readonly JsonSerializerOptions s_options = new() {
@@ -14,6 +15,7 @@ public static class GameDefinitionLoader
         }
     };
 
+    /// <summary>Loads an embedded game definition.</summary>
     public static GameDefinition LoadEmbedded(GameType gameType)
     {
         var assembly = typeof(GameDefinitionLoader).Assembly;
@@ -30,6 +32,7 @@ public static class GameDefinitionLoader
         return definition;
     }
 
+    /// <summary>Validates a game definition.</summary>
     public static void Validate(GameDefinition definition)
     {
         ArgumentNullException.ThrowIfNull(definition);

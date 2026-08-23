@@ -5,6 +5,7 @@ using System.Text.Json;
 
 namespace GameService.Infrastructure;
 
+/// <summary>Provides shared functionality for card game services.</summary>
 public abstract class GameServiceBase : IGameService
 {
     private const string CardInstanceIdPrefix = "card-";
@@ -31,6 +32,7 @@ public abstract class GameServiceBase : IGameService
     private DateTimeOffset? _activeActionTimestamp;
     private DateTimeOffset? _nextReplayTimestamp;
 
+    /// <summary>Initializes a new instance of the game service base type.</summary>
     protected GameServiceBase(
         GameDefinition definition,
         string gameId,
@@ -75,20 +77,27 @@ public abstract class GameServiceBase : IGameService
         RefreshKnowledge();
     }
 
+    /// <summary>Gets the definition.</summary>
     public GameDefinition Definition { get; }
 
+    /// <summary>Gets the state.</summary>
     protected GameState State { get; }
 
+    /// <summary>Gets the sync root.</summary>
     protected object SyncRoot => _sync;
 
+    /// <summary>Gets the random sequence for the current deal.</summary>
     protected ReplayableRandom Random
         => _random ?? throw new InvalidOperationException("Random must be initialized for the current deal.");
 
+    /// <summary>Gets the timestamp of the action currently being executed.</summary>
     protected DateTimeOffset ActionTimestamp
         => _activeActionTimestamp ?? throw new InvalidOperationException("An action is not currently executing.");
 
+    /// <summary>Starts the game.</summary>
     public abstract void StartGame();
 
+    /// <summary>Gets the recorded game history.</summary>
     public GameHistory GetHistory()
     {
         lock (_sync) {
@@ -110,6 +119,7 @@ public abstract class GameServiceBase : IGameService
         }
     }
 
+    /// <summary>Gets the game state visible to a player.</summary>
     public GameState GetGameState(string playerId)
     {
         lock (_sync) {
@@ -145,6 +155,7 @@ public abstract class GameServiceBase : IGameService
         }
     }
 
+    /// <summary>Gets a stable hash of the game state visible to a player.</summary>
     public string GetGameHash(string playerId)
     {
         var json = JsonSerializer.Serialize(GetGameState(playerId), s_jsonOptions);
@@ -152,6 +163,7 @@ public abstract class GameServiceBase : IGameService
             .TrimEnd('=').Replace('+', '-').Replace('/', '_');
     }
 
+    /// <summary>Gets the actions currently available to a player.</summary>
     public IReadOnlyList<GameActionType> GetLegalActions(string playerId)
     {
         lock (_sync) {
@@ -167,6 +179,7 @@ public abstract class GameServiceBase : IGameService
         }
     }
 
+    /// <summary>Attempts to play a card.</summary>
     public ActionResult PlayCard(PlayCardRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -197,6 +210,7 @@ public abstract class GameServiceBase : IGameService
         });
     }
 
+    /// <summary>Attempts to perform a game action.</summary>
     public ActionResult PerformAction(GameActionRequest request)
     {
         ArgumentNullException.ThrowIfNull(request);
@@ -219,8 +233,10 @@ public abstract class GameServiceBase : IGameService
         });
     }
 
+    /// <summary>Determines whether an action is available to a player.</summary>
     protected virtual bool IsActionAvailable(PlayerState player, GameActionType actionId) => true;
 
+    /// <summary>Validates a requested card play.</summary>
     protected virtual void ValidatePlayCard(PlayerState player, PileState source, CardState card, PileState target)
     {
         if (source.Owner?.Kind != PileOwnerKind.Seat || source.Owner.Seat != player.Seat) {
@@ -231,16 +247,19 @@ public abstract class GameServiceBase : IGameService
         }
     }
 
+    /// <summary>Applies a validated card play.</summary>
     protected virtual void ApplyPlayCard(PlayerState player, PileState source, CardState card, PileState target)
     {
         MoveCard(source, card, target, faceUp: true);
     }
 
+    /// <summary>Applies a non-card game action.</summary>
     protected virtual void ApplyOtherAction(PlayerState player, GameActionType name, JsonElement arguments)
     {
         throw Rule(GameRuleError.UnsupportedAction, $"Action '{name}' is not implemented by {GetType().Name}.");
     }
 
+    /// <summary>Replays a recorded system action.</summary>
     protected virtual void ReplaySystemAction(GameHistoryEntry entry)
     {
         if (entry.Sequence == 1 && entry.Action == GameActionType.Deal) {
@@ -250,6 +269,7 @@ public abstract class GameServiceBase : IGameService
         throw new InvalidOperationException($"System action '{entry.Action}' is not supported by {GetType().Name} history replay.");
     }
 
+    /// <summary>Executes and records a system action.</summary>
     protected ActionResult ExecuteSystemAction(GameActionType action, string actionId, Action mutation)
         => ExecuteAction(
             SystemActionIds.Actor,
@@ -260,6 +280,7 @@ public abstract class GameServiceBase : IGameService
             mutation,
             validatePlayer: false);
 
+    /// <summary>Sets the current game phase and active seats.</summary>
     protected void SetPhase(GamePhase phaseId, TurnMode mode, params int[] activeSeats)
     {
         if (!Definition.Phases.Any(phase => phase.Id == phaseId)) {
@@ -276,18 +297,23 @@ public abstract class GameServiceBase : IGameService
         State.Turn.PrioritySeat = activeSeats.FirstOrDefault();
     }
 
+    /// <summary>Gets a player by identifier.</summary>
     protected PlayerState GetPlayer(string playerId)
         => State.Players.SingleOrDefault(player => player.PlayerId == playerId)
             ?? throw Rule(GameRuleError.PlayerNotFound, $"Player '{playerId}' does not belong to this game.");
 
+    /// <summary>Gets the player occupying a seat.</summary>
     protected PlayerState GetPlayerBySeat(int seat)
         => State.Players.Single(player => player.Seat == seat);
 
+    /// <summary>Gets the player identifier for a seat.</summary>
     protected string GetPlayerId(int seat) => GetPlayerBySeat(seat).PlayerId;
 
+    /// <summary>Gets the team identifier for a seat.</summary>
     protected int? GetTeamId(int seat)
         => State.Teams.SingleOrDefault(team => team.SeatIds.Contains(seat))?.TeamId;
 
+    /// <summary>Gets the next eligible seat in turn order.</summary>
     protected int NextSeat(int seat, ISet<int>? skippedSeats = null)
     {
         var order = Definition.PlayerConfiguration.TurnOrder;
@@ -305,16 +331,20 @@ public abstract class GameServiceBase : IGameService
         throw new InvalidOperationException("No active seat remains.");
     }
 
+    /// <summary>Gets a pile by identifier.</summary>
     protected PileState GetPile(PileId pileId)
         => State.Piles.SingleOrDefault(pile => pile.PileId == pileId)
             ?? throw Rule(GameRuleError.PileNotFound, $"Pile '{pileId}' does not exist.");
 
+    /// <summary>Gets a card by instance identifier.</summary>
     protected CardState GetCard(string instanceId)
         => State.Piles.SelectMany(pile => pile.Cards).Single(card => card.InstanceId == instanceId);
 
+    /// <summary>Gets the pile containing a card.</summary>
     protected PileState GetCardPile(string instanceId)
         => State.Piles.Single(pile => pile.Cards.Any(card => card.InstanceId == instanceId));
 
+    /// <summary>Moves a card between piles.</summary>
     protected void MoveCard(PileState source, CardState card, PileState target, bool? faceUp = null)
     {
         if (!source.Cards.Remove(card)) {
@@ -352,6 +382,7 @@ public abstract class GameServiceBase : IGameService
         return effectiveSeed;
     }
 
+    /// <summary>Shuffles a pile using the current random sequence.</summary>
     protected void ShufflePile(PileId pileId)
     {
         var pile = GetPile(pileId);
@@ -371,8 +402,10 @@ public abstract class GameServiceBase : IGameService
         }
     }
 
+    /// <summary>Creates a JSON element for a value.</summary>
     protected static JsonElement JsonValue<T>(T value) => JsonSerializer.SerializeToElement(value, s_jsonOptions);
 
+    /// <summary>Gets a configured game option.</summary>
     protected T GetOption<T>(string name)
     {
         if (!State.Options.TryGetValue(name, out var value)) {
@@ -381,6 +414,7 @@ public abstract class GameServiceBase : IGameService
         return value.Deserialize<T>(s_jsonOptions)!;
     }
 
+    /// <summary>Gets a game state variable.</summary>
     protected T? GetVariable<T>(string name)
     {
         if (!State.Variables.TryGetValue(name, out var value) || value.ValueKind == JsonValueKind.Null) {
@@ -389,10 +423,13 @@ public abstract class GameServiceBase : IGameService
         return value.Deserialize<T>(s_jsonOptions);
     }
 
+    /// <summary>Sets a game state variable.</summary>
     protected void SetVariable<T>(string name, T value) => State.Variables[name] = JsonValue(value);
 
+    /// <summary>Creates a game-rule exception.</summary>
     protected static GameRuleException Rule(GameRuleError code, string message) => new(code, message);
 
+    /// <summary>Deals cards to each player in turn.</summary>
     protected void DealRoundRobin(PileId deckPileId, int cardsPerPlayer)
     {
         var deck = GetPile(deckPileId);
@@ -404,6 +441,7 @@ public abstract class GameServiceBase : IGameService
         }
     }
 
+    /// <summary>Removes and returns the top card of a pile.</summary>
     protected CardState TakeTop(PileState pile)
     {
         var definition = GetPileDefinition(pile.DefinitionId);
@@ -413,6 +451,7 @@ public abstract class GameServiceBase : IGameService
         return definition.Top == PileTop.First ? pile.Cards[0] : pile.Cards[^1];
     }
 
+    /// <summary>Collects all cards into a target pile.</summary>
     protected void CollectAllCards(PileId targetPileId)
     {
         var target = GetPile(targetPileId);
@@ -423,6 +462,7 @@ public abstract class GameServiceBase : IGameService
         }
     }
 
+    /// <summary>Gets a clone of the authoritative game state.</summary>
     protected GameState GetAuthoritativeStateClone()
     {
         lock (_sync) {
@@ -430,6 +470,7 @@ public abstract class GameServiceBase : IGameService
         }
     }
 
+    /// <summary>Replays recorded game history.</summary>
     protected void ReplayHistory(GameHistory history)
     {
         ArgumentNullException.ThrowIfNull(history);
@@ -492,6 +533,7 @@ public abstract class GameServiceBase : IGameService
         }
     }
 
+    /// <summary>Gets the options stored in recorded game history.</summary>
     protected static IReadOnlyDictionary<string, object?> GetReplayOptions(GameHistory history)
         => history.Options.ToDictionary(
             pair => pair.Key,
@@ -587,6 +629,7 @@ public abstract class GameServiceBase : IGameService
             _ => EvaluateActorSelector(selector, player)
         };
 
+    /// <summary>Determines whether a player matches an actor selector.</summary>
     protected virtual bool EvaluateActorSelector(ActorSelector selector, PlayerState player) => false;
 
     private void ValidatePlayers(IReadOnlyList<PlayerRegistration> players)
@@ -783,6 +826,7 @@ public abstract class GameServiceBase : IGameService
         };
     }
 
+    /// <summary>Determines whether a card is visible to a player.</summary>
     protected virtual bool EvaluateVisibility(VisibilityPolicy policy, PlayerState player, PileState pile, CardState? card) => false;
 
     private bool CanSeeAnyCard(VisibilityPolicy policy, PlayerState player, PileState pile)

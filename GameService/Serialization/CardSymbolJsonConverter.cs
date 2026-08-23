@@ -3,8 +3,10 @@ using System.Text.Json.Serialization;
 
 namespace GameService.Serialization;
 
+/// <summary>Converts card symbol values to and from JSON.</summary>
 public sealed class CardSymbolJsonConverter : JsonConverter<CardSymbol>
 {
+    /// <summary>Reads and converts a value from JSON.</summary>
     public override CardSymbol Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
         => reader.GetString() switch {
             "C" => CardSymbol.Clubs,
@@ -20,6 +22,7 @@ public sealed class CardSymbolJsonConverter : JsonConverter<CardSymbol>
             var value => throw new JsonException($"Unknown card symbol '{value}'.")
         };
 
+    /// <summary>Writes a value as JSON.</summary>
     public override void Write(Utf8JsonWriter writer, CardSymbol value, JsonSerializerOptions options)
         => writer.WriteStringValue(value switch {
             CardSymbol.Clubs => "C",

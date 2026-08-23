@@ -2,9 +2,11 @@ using System.Text.Json.Serialization;
 
 namespace GameService.Piles;
 
+/// <summary>Represents a pile identifier.</summary>
 [JsonConverter(typeof(PileIdJsonConverter))]
 public readonly record struct PileId
 {
+    /// <summary>Initializes a new pile identifier.</summary>
     public PileId(PileType type, int? ownerId = null)
     {
         if (ownerId <= 0) {
@@ -15,10 +17,13 @@ public readonly record struct PileId
         OwnerId = ownerId;
     }
 
+    /// <summary>Gets the type.</summary>
     public PileType Type { get; }
 
+    /// <summary>Gets the owner identifier.</summary>
     public int? OwnerId { get; }
 
+    /// <summary>Returns the formatted pile identifier.</summary>
     public override string ToString() => Type switch {
         PileType.Deck => Format(PileNames.Deck),
         PileType.Stock => Format(PileNames.Stock),

@@ -2,6 +2,7 @@ using System.Text.Json;
 
 namespace GameService.Games.Pinochle;
 
+/// <summary>Provides the game service implementation for Pinochle.</summary>
 public sealed class PinochleGameService : GameServiceBase
 {
     private static readonly CardSuit[] s_suits = Enum.GetValues<CardSuit>();
@@ -14,6 +15,7 @@ public sealed class PinochleGameService : GameServiceBase
         [CardRank.Ace] = 6
     };
 
+    /// <summary>Initializes a new instance of the pinochle game service type.</summary>
     public PinochleGameService(
         string gameId,
         IReadOnlyList<PlayerRegistration> players,
@@ -25,6 +27,7 @@ public sealed class PinochleGameService : GameServiceBase
         State.DealerSeat = Definition.PlayerConfiguration.Seats[0];
     }
 
+    /// <summary>Restores a game service from recorded history.</summary>
     public static PinochleGameService Restore(GameHistory history)
     {
         ArgumentNullException.ThrowIfNull(history);
@@ -41,6 +44,7 @@ public sealed class PinochleGameService : GameServiceBase
         return game;
     }
 
+    /// <summary>Starts the game.</summary>
     public override void StartGame()
     {
         ExecuteSystemAction(GameActionType.Deal, SystemActionIds.StartGame, () => {
@@ -54,18 +58,23 @@ public sealed class PinochleGameService : GameServiceBase
         });
     }
 
+    /// <summary>Attempts to place a bid.</summary>
     public ActionResult Bid(string playerId, int value, string actionId, long? expectedRevision = null)
         => PerformAction(Request(playerId, GameActionType.Bid, new { value }, actionId, expectedRevision));
 
+    /// <summary>Attempts to pass.</summary>
     public ActionResult Pass(string playerId, string actionId, long? expectedRevision = null)
         => PerformAction(Request(playerId, GameActionType.Pass, new { }, actionId, expectedRevision));
 
+    /// <summary>Attempts to choose the trump contract.</summary>
     public ActionResult ChooseTrump(string playerId, CardSuit suit, string actionId, long? expectedRevision = null)
         => PerformAction(Request(playerId, GameActionType.ChooseTrump, new { suit }, actionId, expectedRevision));
 
+    /// <summary>Attempts to play a card.</summary>
     public ActionResult Play(string playerId, int cardIndex, string actionId, long? expectedRevision = null)
         => PlayCard(new PlayCardRequest(playerId, PileIds.Hand(GetPlayer(playerId).Seat), cardIndex, PileIds.CurrentTrick, actionId, expectedRevision));
 
+    /// <summary>Gets a card's relative trick-taking strength.</summary>
     public static int GetCardStrength(CardState card, CardSuit ledSuit, CardSuit trump)
     {
         var rank = s_ranks[card.Rank!.Value];
@@ -78,6 +87,7 @@ public sealed class PinochleGameService : GameServiceBase
         return rank;
     }
 
+    /// <summary>Gets the cards that may be legally played.</summary>
     public static IReadOnlyList<CardState> GetLegalCards(
         IReadOnlyList<CardState> hand,
         IReadOnlyList<CardState> trick,
@@ -117,6 +127,7 @@ public sealed class PinochleGameService : GameServiceBase
         return hand.ToArray();
     }
 
+    /// <summary>Calculates the meld in a hand.</summary>
     public static PinochleMeldResult CalculateMeld(
         IReadOnlyCollection<CardState> hand,
         CardSuit trump,
@@ -159,6 +170,7 @@ public sealed class PinochleGameService : GameServiceBase
         return new PinochleMeldResult(values.Values.Sum(), values);
     }
 
+    /// <summary>Scores the current deal.</summary>
     public static (int BiddingDelta, int DefendingDelta) ScoreDeal(
         int bid,
         int biddingMeld,
@@ -173,6 +185,7 @@ public sealed class PinochleGameService : GameServiceBase
         return (biddingDelta, defendingDelta);
     }
 
+    /// <summary>Applies a non-card game action.</summary>
     protected override void ApplyOtherAction(PlayerState player, GameActionType name, JsonElement arguments)
     {
         switch (name) {
@@ -191,6 +204,7 @@ public sealed class PinochleGameService : GameServiceBase
         }
     }
 
+    /// <summary>Validates a requested card play.</summary>
     protected override void ValidatePlayCard(PlayerState player, PileState source, CardState card, PileState target)
     {
         base.ValidatePlayCard(player, source, card, target);
@@ -205,6 +219,7 @@ public sealed class PinochleGameService : GameServiceBase
         }
     }
 
+    /// <summary>Applies a validated card play.</summary>
     protected override void ApplyPlayCard(PlayerState player, PileState source, CardState card, PileState target)
     {
         MoveCard(source, card, target, faceUp: true);

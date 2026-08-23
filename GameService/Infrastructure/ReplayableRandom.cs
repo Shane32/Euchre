@@ -23,21 +23,25 @@ public sealed class ReplayableRandom
     private int _index;
     private int _blockPosition = ValuesPerBlock;
 
+    /// <summary>Initializes a new instance of the replayable random type.</summary>
     public ReplayableRandom(Guid seed)
     {
         Seed = seed;
     }
 
+    /// <summary>Gets the seed.</summary>
     public Guid Seed { get; }
 
     private Span<byte> Block => _block;
 
+    /// <summary>Returns the next value in the reproducible random sequence.</summary>
     public int Next(int exclusiveMaximum)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(exclusiveMaximum);
         return Next(0, exclusiveMaximum);
     }
 
+    /// <summary>Returns the next value in the reproducible random sequence.</summary>
     public int Next(int inclusiveMinimum, int exclusiveMaximum)
     {
         if (inclusiveMinimum > exclusiveMaximum) {
